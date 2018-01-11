@@ -1,0 +1,10 @@
+- Create a symbol table (identifier, type, value)
+- Verify the integrity, making sure that no symbol is used before it's declared
+- Verify the integrity, making sure that assignments and comparisons are of the same type
+- Allow import of external symbols into the table
+- Execute code live on AST
+- Add code execution by calling external symbols
+- Add syntax highlighting
+- Add auto-indentation
+- Add swift generation
+- Add error messages for: tokenization error, parse errors, undeclared symbol errors, type errors

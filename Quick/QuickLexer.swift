@@ -6,6 +6,8 @@
 //  Copyright © 2018 Whole Punk Creators Ltd. All rights reserved.
 //
 
+import Foundation
+
 /***************/
 /* QUICK LEXER */
 /***************/

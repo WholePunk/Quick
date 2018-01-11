@@ -10,16 +10,21 @@ import UIKit
 
 class ViewController: UIViewController {
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
-    }
+    @IBOutlet weak var source: UITextView!
+    
+    @IBAction func runScript(_ sender: Any) {
+        
+        let sourceString = source.text!
+        
+        let parser = Parser()
+        let result = parser.parse(fromSource: sourceString)
+        assert(result == true)
+        parser.root.printDebugDescription(withLevel: 0)
+        print(Output.shared.string)
 
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
+        
     }
-
+    
 
 }
 

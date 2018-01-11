@@ -10,15 +10,13 @@
 /* Abstract Syntax Tree */
 /************************/
 
-var output = ""
-
 class QuickObject {
     
     func printDebugDescription(withLevel: Int) {
         for i in 0...withLevel {
-            output.append("-")
+            Output.shared.string.append("-")
         }
-        output.append("Quick Object\n")
+        Output.shared.string.append("Quick Object\n")
     }
     
 }
@@ -30,9 +28,9 @@ class QuickStatement : QuickObject {
     
     override func printDebugDescription(withLevel: Int) {
         for i in 0...withLevel {
-            output.append("-")
+            Output.shared.string.append("-")
         }
-        output.append("Quick Statement\n")
+        Output.shared.string.append("Quick Statement\n")
         content?.printDebugDescription(withLevel: withLevel + 1)
     }
     
@@ -49,9 +47,9 @@ class QuickMultilineStatement : QuickObject {
     
     override func printDebugDescription(withLevel: Int) {
         for i in 0...withLevel {
-            output.append("-")
+            Output.shared.string.append("-")
         }
-        output.append("Quick MultilineStatement\n")
+        Output.shared.string.append("Quick MultilineStatement\n")
         for statement in content {
             statement.printDebugDescription(withLevel: withLevel + 1)
         }
@@ -66,9 +64,9 @@ class QuickString : QuickObject {
     
     override func printDebugDescription(withLevel: Int) {
         for i in 0...withLevel {
-            output.append("-")
+            Output.shared.string.append("-")
         }
-        output.append("Quick String (\(content))\n")
+        Output.shared.string.append("Quick String (\(content))\n")
     }
     
 }
@@ -80,9 +78,9 @@ class QuickIdentifier : QuickObject {
     
     override func printDebugDescription(withLevel: Int) {
         for i in 0...withLevel {
-            output.append("-")
+            Output.shared.string.append("-")
         }
-        output.append("Quick Identifier (\(content))\n")
+        Output.shared.string.append("Quick Identifier (\(content))\n")
     }
 }
 
@@ -93,9 +91,9 @@ class QuickInteger : QuickObject {
     
     override func printDebugDescription(withLevel: Int) {
         for i in 0...withLevel {
-            output.append("-")
+            Output.shared.string.append("-")
         }
-        output.append("Quick Integer (\(content))\n")
+        Output.shared.string.append("Quick Integer (\(content))\n")
     }
     
 }
@@ -107,9 +105,9 @@ class QuickFloat : QuickObject {
     
     override func printDebugDescription(withLevel: Int) {
         for i in 0...withLevel {
-            output.append("-")
+            Output.shared.string.append("-")
         }
-        output.append("Quick Float (\(content))\n")
+        Output.shared.string.append("Quick Float (\(content))\n")
     }
     
 }
@@ -121,9 +119,9 @@ class QuickTrue : QuickObject {
     
     override func printDebugDescription(withLevel: Int) {
         for i in 0...withLevel {
-            output.append("-")
+            Output.shared.string.append("-")
         }
-        output.append("Quick True\n")
+        Output.shared.string.append("Quick True\n")
     }
     
 }
@@ -135,9 +133,9 @@ class QuickFalse : QuickObject {
     
     override func printDebugDescription(withLevel: Int) {
         for i in 0...withLevel {
-            output.append("-")
+            Output.shared.string.append("-")
         }
-        output.append("Quick False\n")
+        Output.shared.string.append("Quick False\n")
     }
     
 }
@@ -149,9 +147,9 @@ class QuickMathExpression : QuickObject {
     
     override func printDebugDescription(withLevel: Int) {
         for i in 0...withLevel {
-            output.append("-")
+            Output.shared.string.append("-")
         }
-        output.append("Quick Math Expression\n")
+        Output.shared.string.append("Quick Math Expression\n")
         content?.printDebugDescription(withLevel: withLevel + 1)
     }
     
@@ -164,9 +162,9 @@ class QuickMathOperator : QuickObject {
     
     override func printDebugDescription(withLevel: Int) {
         for i in 0...withLevel {
-            output.append("-")
+            Output.shared.string.append("-")
         }
-        output.append("Quick Math Operator\n")
+        Output.shared.string.append("Quick Math Operator\n")
         content?.printDebugDescription(withLevel: withLevel + 1)
     }
     
@@ -180,9 +178,9 @@ class QuickPlus : QuickObject {
     
     override func printDebugDescription(withLevel: Int) {
         for i in 0...withLevel {
-            output.append("-")
+            Output.shared.string.append("-")
         }
-        output.append("Quick Plus\n")
+        Output.shared.string.append("Quick Plus\n")
         leftSide?.printDebugDescription(withLevel: withLevel + 1)
         rightSide?.printDebugDescription(withLevel: withLevel + 1)
     }
@@ -197,9 +195,9 @@ class QuickMinus : QuickObject {
     
     override func printDebugDescription(withLevel: Int) {
         for i in 0...withLevel {
-            output.append("-")
+            Output.shared.string.append("-")
         }
-        output.append("Quick Minus\n")
+        Output.shared.string.append("Quick Minus\n")
         leftSide?.printDebugDescription(withLevel: withLevel + 1)
         rightSide?.printDebugDescription(withLevel: withLevel + 1)
     }
@@ -214,9 +212,9 @@ class QuickMultiply : QuickObject {
     
     override func printDebugDescription(withLevel: Int) {
         for i in 0...withLevel {
-            output.append("-")
+            Output.shared.string.append("-")
         }
-        output.append("Quick Multiply\n")
+        Output.shared.string.append("Quick Multiply\n")
         leftSide?.printDebugDescription(withLevel: withLevel + 1)
         rightSide?.printDebugDescription(withLevel: withLevel + 1)
     }
@@ -231,9 +229,9 @@ class QuickDivide : QuickObject {
     
     override func printDebugDescription(withLevel: Int) {
         for i in 0...withLevel {
-            output.append("-")
+            Output.shared.string.append("-")
         }
-        output.append("Quick Divide\n")
+        Output.shared.string.append("Quick Divide\n")
         leftSide?.printDebugDescription(withLevel: withLevel + 1)
         rightSide?.printDebugDescription(withLevel: withLevel + 1)
     }
@@ -248,9 +246,9 @@ class QuickMod : QuickObject {
     
     override func printDebugDescription(withLevel: Int) {
         for i in 0...withLevel {
-            output.append("-")
+            Output.shared.string.append("-")
         }
-        output.append("Quick Mod\n")
+        Output.shared.string.append("Quick Mod\n")
         leftSide?.printDebugDescription(withLevel: withLevel + 1)
         rightSide?.printDebugDescription(withLevel: withLevel + 1)
     }
@@ -265,9 +263,9 @@ class QuickEqual : QuickObject {
     
     override func printDebugDescription(withLevel: Int) {
         for i in 0...withLevel {
-            output.append("-")
+            Output.shared.string.append("-")
         }
-        output.append("Quick Equal\n")
+        Output.shared.string.append("Quick Equal\n")
         leftSide?.printDebugDescription(withLevel: withLevel + 1)
         rightSide?.printDebugDescription(withLevel: withLevel + 1)
     }
@@ -282,9 +280,9 @@ class QuickNotEqual : QuickObject {
     
     override func printDebugDescription(withLevel: Int) {
         for i in 0...withLevel {
-            output.append("-")
+            Output.shared.string.append("-")
         }
-        output.append("Quick Not Equal\n")
+        Output.shared.string.append("Quick Not Equal\n")
         leftSide?.printDebugDescription(withLevel: withLevel + 1)
         rightSide?.printDebugDescription(withLevel: withLevel + 1)
     }
@@ -299,9 +297,9 @@ class QuickLessThan : QuickObject {
     
     override func printDebugDescription(withLevel: Int) {
         for i in 0...withLevel {
-            output.append("-")
+            Output.shared.string.append("-")
         }
-        output.append("Quick Less Than\n")
+        Output.shared.string.append("Quick Less Than\n")
         leftSide?.printDebugDescription(withLevel: withLevel + 1)
         rightSide?.printDebugDescription(withLevel: withLevel + 1)
     }
@@ -316,9 +314,9 @@ class QuickGreaterThan : QuickObject {
     
     override func printDebugDescription(withLevel: Int) {
         for i in 0...withLevel {
-            output.append("-")
+            Output.shared.string.append("-")
         }
-        output.append("Quick Greater Than\n")
+        Output.shared.string.append("Quick Greater Than\n")
         leftSide?.printDebugDescription(withLevel: withLevel + 1)
         rightSide?.printDebugDescription(withLevel: withLevel + 1)
     }
@@ -333,9 +331,9 @@ class QuickLessThanOrEqualTo : QuickObject {
     
     override func printDebugDescription(withLevel: Int) {
         for i in 0...withLevel {
-            output.append("-")
+            Output.shared.string.append("-")
         }
-        output.append("Quick Less Than or Equal To\n")
+        Output.shared.string.append("Quick Less Than or Equal To\n")
         leftSide?.printDebugDescription(withLevel: withLevel + 1)
         rightSide?.printDebugDescription(withLevel: withLevel + 1)
     }
@@ -350,9 +348,9 @@ class QuickGreaterThanOrEqualTo : QuickObject {
     
     override func printDebugDescription(withLevel: Int) {
         for i in 0...withLevel {
-            output.append("-")
+            Output.shared.string.append("-")
         }
-        output.append("Quick Greater Than or Equal To\n")
+        Output.shared.string.append("Quick Greater Than or Equal To\n")
         leftSide?.printDebugDescription(withLevel: withLevel + 1)
         rightSide?.printDebugDescription(withLevel: withLevel + 1)
     }
@@ -367,9 +365,9 @@ class QuickAnd : QuickObject {
     
     override func printDebugDescription(withLevel: Int) {
         for i in 0...withLevel {
-            output.append("-")
+            Output.shared.string.append("-")
         }
-        output.append("Quick And\n")
+        Output.shared.string.append("Quick And\n")
         leftSide?.printDebugDescription(withLevel: withLevel + 1)
         rightSide?.printDebugDescription(withLevel: withLevel + 1)
     }
@@ -384,9 +382,9 @@ class QuickOr : QuickObject {
     
     override func printDebugDescription(withLevel: Int) {
         for i in 0...withLevel {
-            output.append("-")
+            Output.shared.string.append("-")
         }
-        output.append("Quick Or\n")
+        Output.shared.string.append("Quick Or\n")
         leftSide?.printDebugDescription(withLevel: withLevel + 1)
         rightSide?.printDebugDescription(withLevel: withLevel + 1)
     }
@@ -400,9 +398,9 @@ class QuickNot : QuickObject {
     
     override func printDebugDescription(withLevel: Int) {
         for i in 0...withLevel {
-            output.append("-")
+            Output.shared.string.append("-")
         }
-        output.append("Quick Not\n")
+        Output.shared.string.append("Quick Not\n")
         rightSide?.printDebugDescription(withLevel: withLevel + 1)
     }
     
@@ -415,9 +413,9 @@ class QuickLogicalExpression : QuickObject {
     
     override func printDebugDescription(withLevel: Int) {
         for i in 0...withLevel {
-            output.append("-")
+            Output.shared.string.append("-")
         }
-        output.append("Quick Logical Expression\n")
+        Output.shared.string.append("Quick Logical Expression\n")
         content?.printDebugDescription(withLevel: withLevel + 1)
     }
     
@@ -430,9 +428,9 @@ class QuickParameters : QuickObject {
     
     override func printDebugDescription(withLevel: Int) {
         for i in 0...withLevel {
-            output.append("-")
+            Output.shared.string.append("-")
         }
-        output.append("Quick Parameters\n")
+        Output.shared.string.append("Quick Parameters\n")
         for parameter in parameters {
             parameter.printDebugDescription(withLevel: withLevel + 1)
         }
@@ -447,9 +445,9 @@ class QuickMethodCall : QuickObject {
     
     override func printDebugDescription(withLevel: Int) {
         for i in 0...withLevel {
-            output.append("-")
+            Output.shared.string.append("-")
         }
-        output.append("Quick Method Call = \(methodName)\n")
+        Output.shared.string.append("Quick Method Call = \(methodName)\n")
         parameters?.printDebugDescription(withLevel: withLevel + 1)
     }
     
@@ -462,9 +460,9 @@ class QuickProperty : QuickObject {
     
     override func printDebugDescription(withLevel: Int) {
         for i in 0...withLevel {
-            output.append("-")
+            Output.shared.string.append("-")
         }
-        output.append("Quick Property\n")
+        Output.shared.string.append("Quick Property\n")
         for identifier in content {
             identifier.printDebugDescription(withLevel: withLevel + 1)
         }
@@ -479,9 +477,9 @@ class QuickValue : QuickObject {
     
     override func printDebugDescription(withLevel: Int) {
         for i in 0...withLevel {
-            output.append("-")
+            Output.shared.string.append("-")
         }
-        output.append("Quick Value\n")
+        Output.shared.string.append("Quick Value\n")
         content?.printDebugDescription(withLevel: withLevel + 1)
     }
     
@@ -495,9 +493,9 @@ class QuickAssignment : QuickObject {
     
     override func printDebugDescription(withLevel: Int) {
         for i in 0...withLevel {
-            output.append("-")
+            Output.shared.string.append("-")
         }
-        output.append("Quick Assignment\n")
+        Output.shared.string.append("Quick Assignment\n")
         leftSide?.printDebugDescription(withLevel: withLevel + 1)
         rightSide?.printDebugDescription(withLevel: withLevel + 1)
     }
@@ -512,9 +510,9 @@ class QuickArray : QuickObject {
     
     override func printDebugDescription(withLevel: Int) {
         for i in 0...withLevel {
-            output.append("-")
+            Output.shared.string.append("-")
         }
-        output.append("Quick Array\n")
+        Output.shared.string.append("Quick Array\n")
         parameters?.printDebugDescription(withLevel: withLevel + 1)
     }
     
@@ -528,9 +526,9 @@ class QuickIfStatement : QuickObject {
     
     override func printDebugDescription(withLevel: Int) {
         for i in 0...withLevel {
-            output.append("-")
+            Output.shared.string.append("-")
         }
-        output.append("Quick If Statement\n")
+        Output.shared.string.append("Quick If Statement\n")
         expression?.printDebugDescription(withLevel: withLevel + 1)
         executionBlock?.printDebugDescription(withLevel: withLevel + 1)
     }
@@ -546,9 +544,9 @@ class QuickForLoop : QuickObject {
     
     override func printDebugDescription(withLevel: Int) {
         for i in 0...withLevel {
-            output.append("-")
+            Output.shared.string.append("-")
         }
-        output.append("Quick For Loop\n")
+        Output.shared.string.append("Quick For Loop\n")
         identifier?.printDebugDescription(withLevel: withLevel + 1)
         array?.printDebugDescription(withLevel: withLevel + 1)
         executionBlock?.printDebugDescription(withLevel: withLevel + 1)
@@ -564,9 +562,9 @@ class QuickWhileLoop : QuickObject {
     
     override func printDebugDescription(withLevel: Int) {
         for i in 0...withLevel {
-            output.append("-")
+            Output.shared.string.append("-")
         }
-        output.append("Quick While Loop\n")
+        Output.shared.string.append("Quick While Loop\n")
         expression?.printDebugDescription(withLevel: withLevel + 1)
         executionBlock?.printDebugDescription(withLevel: withLevel + 1)
     }
