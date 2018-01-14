@@ -1,10 +1,20 @@
-- Create a symbol table (identifier, type, value)
-- Verify the integrity, making sure that no symbol is used before it's declared
-- Verify the integrity, making sure that assignments and comparisons are of the same type
-- Allow import of external symbols into the table
+√ Create a symbol table (identifier, type)
+    √ We have to make sure that symbols are used after they're declared
+    √ We have to make sure that assignments are the same type
+    √ We have to make sure that identifiers return a valid type
+    √ We have to make sure that comparisons are the same type
+    √ We have to make sure that math expressions are of the same type
+    √ We have to make sure that logical expressions are of the same type
+    √ We have to make sure that logical expressions return the correct type
+    √ We have to make sure that math expressions return the correct type
+    √ Make certain that variables only exist in the symbol table when they're in scope (push/pop scopes)
+√ Allow import of external symbols into the table
 - Execute code live on AST
+    - Create stack for execution
+    - Implement execute() functions for all AST objects
 - Add code execution by calling external symbols
+- Add swift generation
 - Add syntax highlighting
 - Add auto-indentation
-- Add swift generation
 - Add error messages for: tokenization error, parse errors, undeclared symbol errors, type errors
+- Write a fuckton more tests

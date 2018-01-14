@@ -12,15 +12,23 @@ class ViewController: UIViewController {
 
     @IBOutlet weak var source: UITextView!
     
+    override func viewDidAppear(_ animated: Bool) {
+        source.becomeFirstResponder()
+    }
+    
     @IBAction func runScript(_ sender: Any) {
         
         let sourceString = source.text!
         
         let parser = Parser()
+        parser.symbolTable.addSymbol("external", ofType: "Integer")
         let result = parser.parse(fromSource: sourceString)
-        assert(result == true)
+        guard result == true else {
+            return
+        }
         parser.root.printDebugDescription(withLevel: 0)
         print(Output.shared.string)
+        parser.symbolTable.printSymbolTable()
 
         
     }

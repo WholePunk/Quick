@@ -17,6 +17,7 @@ class Parser {
     var errorAt = -1
     var lastCreatedQuickObject : QuickObject?
     var root = QuickMultilineStatement()
+    var symbolTable = QuickSymbolTable()
     
     func currentToken() -> Token {
         return tokens[tokenIndex]
@@ -32,11 +33,9 @@ class Parser {
     
     func parse(fromSource: String) -> Bool {
         
+        QuickSymbolTable.sharedRoot = symbolTable
+        Output.shared.string = ""
         self.tokens = Tokenizer().tokens(fromSource: fromSource)
-        for token in tokens {
-            print(token.tokenType)
-            print(token.tokenString)
-        }
         
         lastCreatedQuickObject = root
         
@@ -55,6 +54,8 @@ class Parser {
             
         }
         
+        root.checkSymbols(symbolTable: symbolTable)
+        
         return true
         
     }
@@ -63,9 +64,6 @@ class Parser {
         
         let backtrackIndex = tokenIndex
         var astObject = QuickMultilineStatement()
-        
-        print(currentToken())
-        print(currentType())
         
         if currentType() == TokenType.EOF {
             lastCreatedQuickObject = astObject
@@ -121,9 +119,7 @@ class Parser {
                 return false
             }
         } else if parseForLoop() {
-            print(currentType())
             if currentType() == TokenType.NEWLINE {
-                print(lastCreatedQuickObject)
                 astObject.content = lastCreatedQuickObject as? QuickForLoop
                 lastCreatedQuickObject = astObject
                 tokenIndex += 1
@@ -173,7 +169,11 @@ class Parser {
         let backtrackIndex = tokenIndex
         let astObject = QuickValue()
         
-        if currentType() == TokenType.IDENTIFIER {
+        if parseMathExpression() {
+            astObject.content = lastCreatedQuickObject as? QuickMathExpression
+            lastCreatedQuickObject = astObject
+            return true
+        } else if currentType() == TokenType.IDENTIFIER {
             let identifierObject = QuickIdentifier()
             identifierObject.parent = astObject
             identifierObject.content = currentToken().tokenString
@@ -189,10 +189,6 @@ class Parser {
             lastCreatedQuickObject = astObject
             tokenIndex += 1
             return true
-        } else if parseMathExpression() {
-            astObject.content = lastCreatedQuickObject as? QuickMathExpression
-            lastCreatedQuickObject = astObject
-            return true
         } else if parseMethodCall() {
             astObject.content = lastCreatedQuickObject as? QuickMethodCall
             lastCreatedQuickObject = astObject
@@ -202,7 +198,6 @@ class Parser {
             lastCreatedQuickObject = astObject
             return true
         } else {
-            print("Could not parse value")
             tokenIndex = backtrackIndex
             return false
         }
@@ -252,7 +247,6 @@ class Parser {
         
         if currentType() == TokenType.INTEGER {
             let quickInteger = QuickInteger()
-            print(currentToken().tokenString)
             quickInteger.content = Int(currentToken().tokenString)!
             quickInteger.parent = astObject
             astObject.content = quickInteger
@@ -840,7 +834,7 @@ class Parser {
             return false
         }
         
-        if !parseLogicalExpression() && !parseValue() {
+        if !parseValue() && !parseLogicalExpression() {
             tokenIndex = backtrackIndex
             return false
         }
@@ -943,7 +937,6 @@ class Parser {
         
         if !parseValue() && !parseLogicalExpression() {
             tokenIndex = backtrackIndex
-            print("Could not parse out a value or a logical result")
             return false
         }
         astObject.parameters.append(lastCreatedQuickObject!)
@@ -959,9 +952,6 @@ class Parser {
                 }
             }
         }
-        
-        print("Got past the values")
-        print("Current type is \(currentType())")
         
         lastCreatedQuickObject = astObject
         return true

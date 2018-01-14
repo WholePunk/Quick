@@ -13,12 +13,24 @@
 class QuickObject {
     
     func printDebugDescription(withLevel: Int) {
-        for i in 0...withLevel {
+        for _ in 0...withLevel {
             Output.shared.string.append("-")
         }
         Output.shared.string.append("Quick Object\n")
     }
     
+    func checkSymbols(symbolTable : QuickSymbolTable) {
+        
+    }
+    
+    func addSymbols(symbolTable : QuickSymbolTable) {
+        
+    }
+    
+    func getType() -> String {
+        return ""
+    }
+        
 }
 
 class QuickStatement : QuickObject {
@@ -34,6 +46,10 @@ class QuickStatement : QuickObject {
         content?.printDebugDescription(withLevel: withLevel + 1)
     }
     
+    override func checkSymbols(symbolTable : QuickSymbolTable) {
+        content?.checkSymbols(symbolTable: symbolTable)
+    }
+
 }
 
 class QuickMultilineStatement : QuickObject {
@@ -46,13 +62,22 @@ class QuickMultilineStatement : QuickObject {
     }
     
     override func printDebugDescription(withLevel: Int) {
-        for i in 0...withLevel {
+        for _ in 0...withLevel {
             Output.shared.string.append("-")
         }
         Output.shared.string.append("Quick MultilineStatement\n")
         for statement in content {
             statement.printDebugDescription(withLevel: withLevel + 1)
         }
+    }
+    
+    override func checkSymbols(symbolTable : QuickSymbolTable) {
+        symbolTable.pushScope()
+        for statement in content {
+            statement.checkSymbols(symbolTable: symbolTable)
+        }
+        symbolTable.printSymbolTable()
+        symbolTable.popScope()
     }
     
 }
@@ -63,11 +88,16 @@ class QuickString : QuickObject {
     var parent : QuickObject?
     
     override func printDebugDescription(withLevel: Int) {
-        for i in 0...withLevel {
+        for _ in 0...withLevel {
             Output.shared.string.append("-")
         }
         Output.shared.string.append("Quick String (\(content))\n")
     }
+    
+    override func getType() -> String {
+        return "String"
+    }
+
     
 }
 
@@ -77,11 +107,29 @@ class QuickIdentifier : QuickObject {
     var parent : QuickObject?
     
     override func printDebugDescription(withLevel: Int) {
-        for i in 0...withLevel {
+        for _ in 0...withLevel {
             Output.shared.string.append("-")
         }
         Output.shared.string.append("Quick Identifier (\(content))\n")
     }
+    
+    override func addSymbols(symbolTable : QuickSymbolTable) {
+        symbolTable.addSymbol(content, ofType: "")
+    }
+    
+    override func checkSymbols(symbolTable : QuickSymbolTable) {
+        symbolTable.expectSymbol(content)
+    }
+    
+    override func getType() -> String {
+        
+        guard QuickSymbolTable.sharedRoot != nil else {
+            return "Symbol Table Error"
+        }
+        
+        return QuickSymbolTable.sharedRoot!.getType(ofIdentifier: content)
+    }
+    
 }
 
 class QuickInteger : QuickObject {
@@ -94,6 +142,10 @@ class QuickInteger : QuickObject {
             Output.shared.string.append("-")
         }
         Output.shared.string.append("Quick Integer (\(content))\n")
+    }
+    
+    override func getType() -> String {
+        return "Integer"
     }
     
 }
@@ -110,6 +162,11 @@ class QuickFloat : QuickObject {
         Output.shared.string.append("Quick Float (\(content))\n")
     }
     
+    override func getType() -> String {
+        return "Float"
+    }
+
+    
 }
 
 class QuickTrue : QuickObject {
@@ -124,6 +181,10 @@ class QuickTrue : QuickObject {
         Output.shared.string.append("Quick True\n")
     }
     
+    override func getType() -> String {
+        return "Boolean"
+    }
+    
 }
 
 class QuickFalse : QuickObject {
@@ -132,10 +193,14 @@ class QuickFalse : QuickObject {
     var parent : QuickObject?
     
     override func printDebugDescription(withLevel: Int) {
-        for i in 0...withLevel {
+        for _ in 0...withLevel {
             Output.shared.string.append("-")
         }
         Output.shared.string.append("Quick False\n")
+    }
+    
+    override func getType() -> String {
+        return "Boolean"
     }
     
 }
@@ -153,6 +218,17 @@ class QuickMathExpression : QuickObject {
         content?.printDebugDescription(withLevel: withLevel + 1)
     }
     
+    override func checkSymbols(symbolTable : QuickSymbolTable) {
+        content?.checkSymbols(symbolTable: symbolTable)
+    }
+
+    override func getType() -> String {
+        if content != nil {
+            return content!.getType()
+        }
+        return ""
+    }
+    
 }
 
 class QuickMathOperator : QuickObject {
@@ -168,6 +244,19 @@ class QuickMathOperator : QuickObject {
         content?.printDebugDescription(withLevel: withLevel + 1)
     }
     
+    override func checkSymbols(symbolTable : QuickSymbolTable) {
+        content?.checkSymbols(symbolTable: symbolTable)
+    }
+    
+    override func getType() -> String {
+        
+        guard content != nil else {
+            return ""
+        }
+        
+        return content!.getType()
+    }
+    
 }
 
 class QuickPlus : QuickObject {
@@ -177,7 +266,7 @@ class QuickPlus : QuickObject {
     var parent : QuickObject?
     
     override func printDebugDescription(withLevel: Int) {
-        for i in 0...withLevel {
+        for _ in 0...withLevel {
             Output.shared.string.append("-")
         }
         Output.shared.string.append("Quick Plus\n")
@@ -185,6 +274,30 @@ class QuickPlus : QuickObject {
         rightSide?.printDebugDescription(withLevel: withLevel + 1)
     }
     
+    override func checkSymbols(symbolTable : QuickSymbolTable) {
+        leftSide?.checkSymbols(symbolTable: symbolTable)
+        rightSide?.checkSymbols(symbolTable: symbolTable)
+        
+        guard leftSide != nil && rightSide != nil else {
+            return
+        }
+        
+        let leftType = leftSide!.getType()
+        let rightType = rightSide!.getType()
+        if leftType != rightType {
+            print("ERROR: type \(leftType) and type \(rightType) do not match")
+        }
+    }
+    
+    override func getType() -> String {
+        
+        guard leftSide != nil else {
+            return ""
+        }
+        
+        return leftSide!.getType()
+    }
+
 }
 
 class QuickMinus : QuickObject {
@@ -200,6 +313,30 @@ class QuickMinus : QuickObject {
         Output.shared.string.append("Quick Minus\n")
         leftSide?.printDebugDescription(withLevel: withLevel + 1)
         rightSide?.printDebugDescription(withLevel: withLevel + 1)
+    }
+    
+    override func checkSymbols(symbolTable : QuickSymbolTable) {
+        leftSide?.checkSymbols(symbolTable: symbolTable)
+        rightSide?.checkSymbols(symbolTable: symbolTable)
+        
+        guard leftSide != nil && rightSide != nil else {
+            return
+        }
+        
+        let leftType = leftSide!.getType()
+        let rightType = rightSide!.getType()
+        if leftType != rightType {
+            print("ERROR: type \(leftType) and type \(rightType) do not match")
+        }
+    }
+    
+    override func getType() -> String {
+        
+        guard leftSide != nil else {
+            return ""
+        }
+        
+        return leftSide!.getType()
     }
     
 }
@@ -219,6 +356,30 @@ class QuickMultiply : QuickObject {
         rightSide?.printDebugDescription(withLevel: withLevel + 1)
     }
     
+    override func checkSymbols(symbolTable : QuickSymbolTable) {
+        leftSide?.checkSymbols(symbolTable: symbolTable)
+        rightSide?.checkSymbols(symbolTable: symbolTable)
+        
+        guard leftSide != nil && rightSide != nil else {
+            return
+        }
+        
+        let leftType = leftSide!.getType()
+        let rightType = rightSide!.getType()
+        if leftType != rightType {
+            print("ERROR: type \(leftType) and type \(rightType) do not match")
+        }
+    }
+
+    override func getType() -> String {
+        
+        guard leftSide != nil else {
+            return ""
+        }
+        
+        return leftSide!.getType()
+    }
+
 }
 
 class QuickDivide : QuickObject {
@@ -236,6 +397,30 @@ class QuickDivide : QuickObject {
         rightSide?.printDebugDescription(withLevel: withLevel + 1)
     }
     
+    override func checkSymbols(symbolTable : QuickSymbolTable) {
+        leftSide?.checkSymbols(symbolTable: symbolTable)
+        rightSide?.checkSymbols(symbolTable: symbolTable)
+        
+        guard leftSide != nil && rightSide != nil else {
+            return
+        }
+        
+        let leftType = leftSide!.getType()
+        let rightType = rightSide!.getType()
+        if leftType != rightType {
+            print("ERROR: type \(leftType) and type \(rightType) do not match")
+        }
+    }
+
+    override func getType() -> String {
+        
+        guard leftSide != nil else {
+            return ""
+        }
+        
+        return leftSide!.getType()
+    }
+
 }
 
 class QuickMod : QuickObject {
@@ -253,6 +438,30 @@ class QuickMod : QuickObject {
         rightSide?.printDebugDescription(withLevel: withLevel + 1)
     }
     
+    override func checkSymbols(symbolTable : QuickSymbolTable) {
+        leftSide?.checkSymbols(symbolTable: symbolTable)
+        rightSide?.checkSymbols(symbolTable: symbolTable)
+        
+        guard leftSide != nil && rightSide != nil else {
+            return
+        }
+        
+        let leftType = leftSide!.getType()
+        let rightType = rightSide!.getType()
+        if leftType != rightType {
+            print("ERROR: type \(leftType) and type \(rightType) do not match")
+        }
+    }
+
+    override func getType() -> String {
+        
+        guard leftSide != nil else {
+            return ""
+        }
+        
+        return leftSide!.getType()
+    }
+
 }
 
 class QuickEqual : QuickObject {
@@ -270,6 +479,22 @@ class QuickEqual : QuickObject {
         rightSide?.printDebugDescription(withLevel: withLevel + 1)
     }
     
+    override func checkSymbols(symbolTable : QuickSymbolTable) {
+        leftSide?.checkSymbols(symbolTable: symbolTable)
+        rightSide?.checkSymbols(symbolTable: symbolTable)
+        
+        guard leftSide != nil && rightSide != nil else {
+            return
+        }
+        
+        let leftType = leftSide!.getType()
+        let rightType = rightSide!.getType()
+        if leftType != rightType {
+            print("ERROR: type \(leftType) and type \(rightType) do not match")
+        }
+
+    }
+
 }
 
 class QuickNotEqual : QuickObject {
@@ -287,6 +512,21 @@ class QuickNotEqual : QuickObject {
         rightSide?.printDebugDescription(withLevel: withLevel + 1)
     }
     
+    override func checkSymbols(symbolTable : QuickSymbolTable) {
+        leftSide?.checkSymbols(symbolTable: symbolTable)
+        rightSide?.checkSymbols(symbolTable: symbolTable)
+        
+        guard leftSide != nil && rightSide != nil else {
+            return
+        }
+        
+        let leftType = leftSide!.getType()
+        let rightType = rightSide!.getType()
+        if leftType != rightType {
+            print("ERROR: type \(leftType) and type \(rightType) do not match")
+        }
+    }
+
 }
 
 class QuickLessThan : QuickObject {
@@ -304,6 +544,21 @@ class QuickLessThan : QuickObject {
         rightSide?.printDebugDescription(withLevel: withLevel + 1)
     }
     
+    override func checkSymbols(symbolTable : QuickSymbolTable) {
+        leftSide?.checkSymbols(symbolTable: symbolTable)
+        rightSide?.checkSymbols(symbolTable: symbolTable)
+        
+        guard leftSide != nil && rightSide != nil else {
+            return
+        }
+        
+        let leftType = leftSide!.getType()
+        let rightType = rightSide!.getType()
+        if leftType != rightType {
+            print("ERROR: type \(leftType) and type \(rightType) do not match")
+        }
+    }
+
 }
 
 class QuickGreaterThan : QuickObject {
@@ -313,7 +568,7 @@ class QuickGreaterThan : QuickObject {
     var parent : QuickObject?
     
     override func printDebugDescription(withLevel: Int) {
-        for i in 0...withLevel {
+        for _ in 0...withLevel {
             Output.shared.string.append("-")
         }
         Output.shared.string.append("Quick Greater Than\n")
@@ -321,6 +576,21 @@ class QuickGreaterThan : QuickObject {
         rightSide?.printDebugDescription(withLevel: withLevel + 1)
     }
     
+    override func checkSymbols(symbolTable : QuickSymbolTable) {
+        leftSide?.checkSymbols(symbolTable: symbolTable)
+        rightSide?.checkSymbols(symbolTable: symbolTable)
+        
+        guard leftSide != nil && rightSide != nil else {
+            return
+        }
+        
+        let leftType = leftSide!.getType()
+        let rightType = rightSide!.getType()
+        if leftType != rightType {
+            print("ERROR: type \(leftType) and type \(rightType) do not match")
+        }
+    }
+
 }
 
 class QuickLessThanOrEqualTo : QuickObject {
@@ -330,7 +600,7 @@ class QuickLessThanOrEqualTo : QuickObject {
     var parent : QuickObject?
     
     override func printDebugDescription(withLevel: Int) {
-        for i in 0...withLevel {
+        for _ in 0...withLevel {
             Output.shared.string.append("-")
         }
         Output.shared.string.append("Quick Less Than or Equal To\n")
@@ -338,6 +608,21 @@ class QuickLessThanOrEqualTo : QuickObject {
         rightSide?.printDebugDescription(withLevel: withLevel + 1)
     }
     
+    override func checkSymbols(symbolTable : QuickSymbolTable) {
+        leftSide?.checkSymbols(symbolTable: symbolTable)
+        rightSide?.checkSymbols(symbolTable: symbolTable)
+        
+        guard leftSide != nil && rightSide != nil else {
+            return
+        }
+        
+        let leftType = leftSide!.getType()
+        let rightType = rightSide!.getType()
+        if leftType != rightType {
+            print("ERROR: type \(leftType) and type \(rightType) do not match")
+        }
+    }
+
 }
 
 class QuickGreaterThanOrEqualTo : QuickObject {
@@ -347,7 +632,7 @@ class QuickGreaterThanOrEqualTo : QuickObject {
     var parent : QuickObject?
     
     override func printDebugDescription(withLevel: Int) {
-        for i in 0...withLevel {
+        for _ in 0...withLevel {
             Output.shared.string.append("-")
         }
         Output.shared.string.append("Quick Greater Than or Equal To\n")
@@ -355,6 +640,21 @@ class QuickGreaterThanOrEqualTo : QuickObject {
         rightSide?.printDebugDescription(withLevel: withLevel + 1)
     }
     
+    override func checkSymbols(symbolTable : QuickSymbolTable) {
+        leftSide?.checkSymbols(symbolTable: symbolTable)
+        rightSide?.checkSymbols(symbolTable: symbolTable)
+        
+        guard leftSide != nil && rightSide != nil else {
+            return
+        }
+        
+        let leftType = leftSide!.getType()
+        let rightType = rightSide!.getType()
+        if leftType != rightType {
+            print("ERROR: type \(leftType) and type \(rightType) do not match")
+        }
+    }
+
 }
 
 class QuickAnd : QuickObject {
@@ -364,7 +664,7 @@ class QuickAnd : QuickObject {
     var parent : QuickObject?
     
     override func printDebugDescription(withLevel: Int) {
-        for i in 0...withLevel {
+        for _ in 0...withLevel {
             Output.shared.string.append("-")
         }
         Output.shared.string.append("Quick And\n")
@@ -372,6 +672,25 @@ class QuickAnd : QuickObject {
         rightSide?.printDebugDescription(withLevel: withLevel + 1)
     }
     
+    override func checkSymbols(symbolTable : QuickSymbolTable) {
+        leftSide?.checkSymbols(symbolTable: symbolTable)
+        rightSide?.checkSymbols(symbolTable: symbolTable)
+        
+        guard leftSide != nil && rightSide != nil else {
+            return
+        }
+        
+        let leftType = leftSide!.getType()
+        if leftType != "Boolean" {
+            print("ERROR: type \(leftType) is not a boolean")
+        }
+        let rightType = rightSide!.getType()
+        if rightType != "Boolean" {
+            print("ERROR: type \(rightType) is not a boolean")
+        }
+
+    }
+
 }
 
 class QuickOr : QuickObject {
@@ -381,7 +700,7 @@ class QuickOr : QuickObject {
     var parent : QuickObject?
     
     override func printDebugDescription(withLevel: Int) {
-        for i in 0...withLevel {
+        for _ in 0...withLevel {
             Output.shared.string.append("-")
         }
         Output.shared.string.append("Quick Or\n")
@@ -389,6 +708,24 @@ class QuickOr : QuickObject {
         rightSide?.printDebugDescription(withLevel: withLevel + 1)
     }
     
+    override func checkSymbols(symbolTable : QuickSymbolTable) {
+        leftSide?.checkSymbols(symbolTable: symbolTable)
+        rightSide?.checkSymbols(symbolTable: symbolTable)
+        
+        guard leftSide != nil && rightSide != nil else {
+            return
+        }
+        
+        let leftType = leftSide!.getType()
+        if leftType != "Boolean" {
+            print("ERROR: type \(leftType) is not a boolean")
+        }
+        let rightType = rightSide!.getType()
+        if rightType != "Boolean" {
+            print("ERROR: type \(rightType) is not a boolean")
+        }
+    }
+
 }
 
 class QuickNot : QuickObject {
@@ -404,6 +741,19 @@ class QuickNot : QuickObject {
         rightSide?.printDebugDescription(withLevel: withLevel + 1)
     }
     
+    override func checkSymbols(symbolTable : QuickSymbolTable) {
+        rightSide?.checkSymbols(symbolTable: symbolTable)
+        
+        guard rightSide != nil else {
+            return
+        }
+        
+        let rightType = rightSide!.getType()
+        if rightType != "Boolean" {
+            print("ERROR: type \(rightType) is not a boolean")
+        }
+    }
+
 }
 
 class QuickLogicalExpression : QuickObject {
@@ -412,13 +762,21 @@ class QuickLogicalExpression : QuickObject {
     var parent : QuickObject?
     
     override func printDebugDescription(withLevel: Int) {
-        for i in 0...withLevel {
+        for _ in 0...withLevel {
             Output.shared.string.append("-")
         }
         Output.shared.string.append("Quick Logical Expression\n")
         content?.printDebugDescription(withLevel: withLevel + 1)
     }
     
+    override func checkSymbols(symbolTable : QuickSymbolTable) {
+        content?.checkSymbols(symbolTable: symbolTable)
+    }
+
+    override func getType() -> String {
+        return "Boolean"
+    }
+
 }
 
 class QuickParameters : QuickObject {
@@ -435,6 +793,14 @@ class QuickParameters : QuickObject {
             parameter.printDebugDescription(withLevel: withLevel + 1)
         }
     }
+    
+    override func checkSymbols(symbolTable : QuickSymbolTable) {
+        for parameter in parameters {
+            parameter.checkSymbols(symbolTable: symbolTable)
+        }
+    }
+
+    
 }
 
 class QuickMethodCall : QuickObject {
@@ -450,6 +816,12 @@ class QuickMethodCall : QuickObject {
         Output.shared.string.append("Quick Method Call = \(methodName)\n")
         parameters?.printDebugDescription(withLevel: withLevel + 1)
     }
+    
+    override func checkSymbols(symbolTable : QuickSymbolTable) {
+        symbolTable.expectSymbol(methodName)
+        parameters?.checkSymbols(symbolTable: symbolTable)
+    }
+
     
 }
 
@@ -468,6 +840,20 @@ class QuickProperty : QuickObject {
         }
     }
     
+    override func addSymbols(symbolTable : QuickSymbolTable) {
+        for identifier in content {
+            identifier.addSymbols(symbolTable: symbolTable)
+        }
+    }
+    
+    override func checkSymbols(symbolTable : QuickSymbolTable) {
+        for identifier in content {
+            identifier.checkSymbols(symbolTable: symbolTable)
+        }
+    }
+
+
+    
 }
 
 class QuickValue : QuickObject {
@@ -482,6 +868,22 @@ class QuickValue : QuickObject {
         Output.shared.string.append("Quick Value\n")
         content?.printDebugDescription(withLevel: withLevel + 1)
     }
+    
+    override func addSymbols(symbolTable : QuickSymbolTable) {
+        content?.addSymbols(symbolTable: symbolTable)
+    }
+    
+    override func checkSymbols(symbolTable : QuickSymbolTable) {
+        content?.checkSymbols(symbolTable: symbolTable)
+    }
+
+    override func getType() -> String {
+        if content != nil {
+            return content!.getType()
+        }
+        return ""
+    }
+
     
 }
 
@@ -499,12 +901,28 @@ class QuickAssignment : QuickObject {
         leftSide?.printDebugDescription(withLevel: withLevel + 1)
         rightSide?.printDebugDescription(withLevel: withLevel + 1)
     }
+        
+    override func checkSymbols(symbolTable : QuickSymbolTable) {
+        leftSide?.addSymbols(symbolTable: symbolTable)
+        leftSide?.checkSymbols(symbolTable: symbolTable)
+        rightSide?.checkSymbols(symbolTable: symbolTable)
+        
+        guard leftSide != nil && rightSide != nil else {
+            return
+        }
+        
+        for identifier in leftSide!.content {
+            let type = rightSide!.getType()
+            symbolTable.checkType(type, ofIdentifier: identifier.content)
+        }
+        
+    }
+
     
 }
 
 class QuickArray : QuickObject {
     
-    var methodName = ""
     var parameters : QuickParameters?
     var parent : QuickObject?
     
@@ -515,6 +933,15 @@ class QuickArray : QuickObject {
         Output.shared.string.append("Quick Array\n")
         parameters?.printDebugDescription(withLevel: withLevel + 1)
     }
+    
+    override func checkSymbols(symbolTable : QuickSymbolTable) {
+        parameters?.checkSymbols(symbolTable: symbolTable)
+    }
+
+    override func getType() -> String {
+        return "Array"
+    }
+
     
 }
 
@@ -532,6 +959,16 @@ class QuickIfStatement : QuickObject {
         expression?.printDebugDescription(withLevel: withLevel + 1)
         executionBlock?.printDebugDescription(withLevel: withLevel + 1)
     }
+    
+    override func addSymbols(symbolTable : QuickSymbolTable) {
+        executionBlock?.addSymbols(symbolTable: symbolTable)
+    }
+    
+    override func checkSymbols(symbolTable : QuickSymbolTable) {
+        expression?.checkSymbols(symbolTable: symbolTable)
+        executionBlock?.checkSymbols(symbolTable: symbolTable)
+    }
+
     
 }
 
@@ -552,6 +989,13 @@ class QuickForLoop : QuickObject {
         executionBlock?.printDebugDescription(withLevel: withLevel + 1)
     }
     
+    override func checkSymbols(symbolTable : QuickSymbolTable) {
+        identifier?.addSymbols(symbolTable: symbolTable)
+        identifier?.checkSymbols(symbolTable: symbolTable)
+        array?.checkSymbols(symbolTable: symbolTable)
+        executionBlock?.checkSymbols(symbolTable: symbolTable)
+    }
+
 }
 
 class QuickWhileLoop : QuickObject {
@@ -568,6 +1012,12 @@ class QuickWhileLoop : QuickObject {
         expression?.printDebugDescription(withLevel: withLevel + 1)
         executionBlock?.printDebugDescription(withLevel: withLevel + 1)
     }
+    
+    override func checkSymbols(symbolTable : QuickSymbolTable) {
+        expression?.checkSymbols(symbolTable: symbolTable)
+        executionBlock?.checkSymbols(symbolTable: symbolTable)
+    }
+
     
 }
 
