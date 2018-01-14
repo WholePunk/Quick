@@ -62,7 +62,7 @@ class QuickSymbolTable {
             return
         }
         
-        print("ERROR: Symbol \"\(identifier)\" used before it was declared")
+        QuickError.shared.setErrorMessage("Symbol \"\(identifier)\" used before it was declared", withLine: -2)
         
     }
     
@@ -76,7 +76,7 @@ class QuickSymbolTable {
                 self.symbols[ofIdentifier] = type
                 return
             }
-            print("ERROR: type \(type) for \(ofIdentifier) does not match existing type of \(self.symbols[ofIdentifier]!)")
+            QuickError.shared.setErrorMessage("Type \(type) for \(ofIdentifier) does not match existing type of \(self.symbols[ofIdentifier]!)", withLine: -2)
             return
         }
         
@@ -84,7 +84,7 @@ class QuickSymbolTable {
             child?.checkType(type, ofIdentifier: ofIdentifier)
             return
         } else {
-            print("ERROR: No identifier \(ofIdentifier) in symbol table during type checking") // Should never happen
+            QuickError.shared.setErrorMessage("No identifier \(ofIdentifier) in symbol table during type checking", withLine: -2)
         }
         
     }

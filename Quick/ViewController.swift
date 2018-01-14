@@ -20,6 +20,11 @@ class ViewController: UIViewController {
         
         let sourceString = source.text!
         
+        QuickError.shared.resetError()
+        QuickError.shared.setCallback { (message) in
+            UIAlertView(title: "Error", message: message, delegate: nil, cancelButtonTitle: "Ok").show()
+        }
+        
         let parser = Parser()
         parser.symbolTable.addSymbol("external", ofType: "Integer")
         let result = parser.parse(fromSource: sourceString)

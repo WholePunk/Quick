@@ -18,6 +18,7 @@ class Parser {
     var lastCreatedQuickObject : QuickObject?
     var root = QuickMultilineStatement()
     var symbolTable = QuickSymbolTable()
+    var currentLine = 0
     
     func currentToken() -> Token {
         return tokens[tokenIndex]
@@ -43,10 +44,12 @@ class Parser {
         while currentType() != TokenType.EOF && errorAt == -1 {
             
             if currentType() == TokenType.NEWLINE {
+                currentLine += 1
                 tokenIndex += 1
             } else {
                 if !parseStatement() {
                     errorAt = tokenIndex
+                    QuickError.shared.setErrorMessage("Parse error", withLine: currentLine)
                     return false
                 }
                 root.addStatement(lastCreatedQuickObject as! QuickStatement)
@@ -77,6 +80,7 @@ class Parser {
         }
         
         while currentType() == TokenType.NEWLINE {
+            currentLine += 1
             tokenIndex += 1
             if currentType() == TokenType.EOF {
                 lastCreatedQuickObject = astObject
@@ -112,53 +116,64 @@ class Parser {
             if currentType() == TokenType.NEWLINE {
                 astObject.content = lastCreatedQuickObject as? QuickAssignment
                 lastCreatedQuickObject = astObject
+                currentLine += 1
                 tokenIndex += 1
                 return true
             } else {
                 tokenIndex = backtrackIndex
+                QuickError.shared.setErrorMessage("Parse error - invalid assignment", withLine: currentLine)
                 return false
             }
         } else if parseForLoop() {
             if currentType() == TokenType.NEWLINE {
                 astObject.content = lastCreatedQuickObject as? QuickForLoop
                 lastCreatedQuickObject = astObject
+                currentLine += 1
                 tokenIndex += 1
                 return true
             } else {
                 tokenIndex = backtrackIndex
+                QuickError.shared.setErrorMessage("Parse error - invalid for loop", withLine: currentLine)
                 return false
             }
         } else if parseWhileLoop() {
             if currentType() == TokenType.NEWLINE {
                 astObject.content = lastCreatedQuickObject as? QuickWhileLoop
                 lastCreatedQuickObject = astObject
+                currentLine += 1
                 tokenIndex += 1
                 return true
             } else {
                 tokenIndex = backtrackIndex
+                QuickError.shared.setErrorMessage("Parse error - invalid while loop", withLine: currentLine)
                 return false
             }
         } else if parseIfStatement() {
             if currentType() == TokenType.NEWLINE {
                 astObject.content = lastCreatedQuickObject as? QuickIfStatement
                 lastCreatedQuickObject = astObject
+                currentLine += 1
                 tokenIndex += 1
                 return true
             } else {
                 tokenIndex = backtrackIndex
+                QuickError.shared.setErrorMessage("Parse error - invalid if statement", withLine: currentLine)
                 return false
             }
         } else if parseMethodCall() {
             if currentType() == TokenType.NEWLINE {
                 astObject.parent?.addStatement(astObject)
+                currentLine += 1
                 tokenIndex += 1
                 return true
             } else {
                 tokenIndex = backtrackIndex
+                QuickError.shared.setErrorMessage("Parse error - invalid method call", withLine: currentLine)
                 return false
             }
         } else {
             tokenIndex = backtrackIndex
+            QuickError.shared.setErrorMessage("Parse error - invalid statement", withLine: currentLine)
             return false
         }
         

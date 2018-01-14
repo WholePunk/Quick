@@ -9,6 +9,11 @@
     √ We have to make sure that math expressions return the correct type
     √ Make certain that variables only exist in the symbol table when they're in scope (push/pop scopes)
 √ Allow import of external symbols into the table
+√ Add error messages for:
+    √ tokenization error
+    √ parse errors
+    √ undeclared symbol errors
+    √ type errors
 - Execute code live on AST
     - Create stack for execution
     - Implement execute() functions for all AST objects
@@ -16,5 +21,4 @@
 - Add swift generation
 - Add syntax highlighting
 - Add auto-indentation
-- Add error messages for: tokenization error, parse errors, undeclared symbol errors, type errors
 - Write a fuckton more tests

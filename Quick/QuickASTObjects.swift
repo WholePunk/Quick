@@ -30,6 +30,11 @@ class QuickObject {
     func getType() -> String {
         return ""
     }
+    
+    func execute() {
+        
+    }
+    
         
 }
 
@@ -307,7 +312,7 @@ class QuickMinus : QuickObject {
     var parent : QuickObject?
     
     override func printDebugDescription(withLevel: Int) {
-        for i in 0...withLevel {
+        for _ in 0...withLevel {
             Output.shared.string.append("-")
         }
         Output.shared.string.append("Quick Minus\n")
@@ -326,7 +331,7 @@ class QuickMinus : QuickObject {
         let leftType = leftSide!.getType()
         let rightType = rightSide!.getType()
         if leftType != rightType {
-            print("ERROR: type \(leftType) and type \(rightType) do not match")
+            QuickError.shared.setErrorMessage("Type \(leftType) and type \(rightType) do not match", withLine: -2)
         }
     }
     
@@ -367,7 +372,7 @@ class QuickMultiply : QuickObject {
         let leftType = leftSide!.getType()
         let rightType = rightSide!.getType()
         if leftType != rightType {
-            print("ERROR: type \(leftType) and type \(rightType) do not match")
+            QuickError.shared.setErrorMessage("Type \(leftType) and type \(rightType) do not match", withLine: -2)
         }
     }
 
@@ -408,7 +413,7 @@ class QuickDivide : QuickObject {
         let leftType = leftSide!.getType()
         let rightType = rightSide!.getType()
         if leftType != rightType {
-            print("ERROR: type \(leftType) and type \(rightType) do not match")
+            QuickError.shared.setErrorMessage("Type \(leftType) and type \(rightType) do not match", withLine: -2)
         }
     }
 
@@ -449,7 +454,7 @@ class QuickMod : QuickObject {
         let leftType = leftSide!.getType()
         let rightType = rightSide!.getType()
         if leftType != rightType {
-            print("ERROR: type \(leftType) and type \(rightType) do not match")
+            QuickError.shared.setErrorMessage("Type \(leftType) and type \(rightType) do not match", withLine: -2)
         }
     }
 
@@ -490,7 +495,7 @@ class QuickEqual : QuickObject {
         let leftType = leftSide!.getType()
         let rightType = rightSide!.getType()
         if leftType != rightType {
-            print("ERROR: type \(leftType) and type \(rightType) do not match")
+            QuickError.shared.setErrorMessage("Type \(leftType) and type \(rightType) do not match", withLine: -2)
         }
 
     }
@@ -523,7 +528,7 @@ class QuickNotEqual : QuickObject {
         let leftType = leftSide!.getType()
         let rightType = rightSide!.getType()
         if leftType != rightType {
-            print("ERROR: type \(leftType) and type \(rightType) do not match")
+            QuickError.shared.setErrorMessage("Type \(leftType) and type \(rightType) do not match", withLine: -2)
         }
     }
 
@@ -555,7 +560,7 @@ class QuickLessThan : QuickObject {
         let leftType = leftSide!.getType()
         let rightType = rightSide!.getType()
         if leftType != rightType {
-            print("ERROR: type \(leftType) and type \(rightType) do not match")
+            QuickError.shared.setErrorMessage("Type \(leftType) and type \(rightType) do not match", withLine: -2)
         }
     }
 
@@ -587,7 +592,7 @@ class QuickGreaterThan : QuickObject {
         let leftType = leftSide!.getType()
         let rightType = rightSide!.getType()
         if leftType != rightType {
-            print("ERROR: type \(leftType) and type \(rightType) do not match")
+            QuickError.shared.setErrorMessage("Type \(leftType) and type \(rightType) do not match", withLine: -2)
         }
     }
 
@@ -619,7 +624,7 @@ class QuickLessThanOrEqualTo : QuickObject {
         let leftType = leftSide!.getType()
         let rightType = rightSide!.getType()
         if leftType != rightType {
-            print("ERROR: type \(leftType) and type \(rightType) do not match")
+            QuickError.shared.setErrorMessage("Type \(leftType) and type \(rightType) do not match", withLine: -2)
         }
     }
 
@@ -651,7 +656,7 @@ class QuickGreaterThanOrEqualTo : QuickObject {
         let leftType = leftSide!.getType()
         let rightType = rightSide!.getType()
         if leftType != rightType {
-            print("ERROR: type \(leftType) and type \(rightType) do not match")
+            QuickError.shared.setErrorMessage("Type \(leftType) and type \(rightType) do not match", withLine: -2)
         }
     }
 
@@ -682,11 +687,11 @@ class QuickAnd : QuickObject {
         
         let leftType = leftSide!.getType()
         if leftType != "Boolean" {
-            print("ERROR: type \(leftType) is not a boolean")
+            QuickError.shared.setErrorMessage("Type \(leftType) is not a boolean", withLine: -2)
         }
         let rightType = rightSide!.getType()
         if rightType != "Boolean" {
-            print("ERROR: type \(rightType) is not a boolean")
+            QuickError.shared.setErrorMessage("Type \(rightType) is not a boolean", withLine: -2)
         }
 
     }
@@ -718,11 +723,11 @@ class QuickOr : QuickObject {
         
         let leftType = leftSide!.getType()
         if leftType != "Boolean" {
-            print("ERROR: type \(leftType) is not a boolean")
+            QuickError.shared.setErrorMessage("Type \(leftType) is not a boolean", withLine: -2)
         }
         let rightType = rightSide!.getType()
         if rightType != "Boolean" {
-            print("ERROR: type \(rightType) is not a boolean")
+            QuickError.shared.setErrorMessage("Type \(rightType) is not a boolean", withLine: -2)
         }
     }
 
@@ -750,7 +755,7 @@ class QuickNot : QuickObject {
         
         let rightType = rightSide!.getType()
         if rightType != "Boolean" {
-            print("ERROR: type \(rightType) is not a boolean")
+            QuickError.shared.setErrorMessage("Type \(rightType) is not a boolean", withLine: -2)
         }
     }
 

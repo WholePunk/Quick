@@ -72,6 +72,7 @@ class Tokenizer {
     var currentToken = TokenType.NONE
     var inString = false
     var tokens : Array<Token> = []
+    var currentLine = 0
     
     func commitToken() {
         
@@ -80,6 +81,14 @@ class Tokenizer {
         token.tokenString = currentTokenString
         tokens.append(token)
         
+        if currentToken == .NEWLINE {
+            currentLine += 1
+        }
+        
+        if currentToken == .ERROR {
+            QuickError.shared.setErrorMessage("Invalid token \"\(currentTokenString)\"", withLine: currentLine)
+        }
+
         currentTokenString = ""
         currentToken = TokenType.NONE
         inString = false
