@@ -36,6 +36,7 @@ class Parser {
         
         QuickSymbolTable.sharedRoot = symbolTable
         Output.shared.string = ""
+        QuickMemory.shared.reset()
         self.tokens = Tokenizer().tokens(fromSource: fromSource)
         
         lastCreatedQuickObject = root
@@ -65,8 +66,7 @@ class Parser {
     
     func parseMultilineStatement() -> Bool {
         
-        let backtrackIndex = tokenIndex
-        var astObject = QuickMultilineStatement()
+        let astObject = QuickMultilineStatement()
         
         if currentType() == TokenType.EOF {
             lastCreatedQuickObject = astObject
@@ -708,7 +708,7 @@ class Parser {
     func parseForLoop() -> Bool {
         
         let backtrackIndex = tokenIndex
-        var astObject = QuickForLoop()
+        let astObject = QuickForLoop()
         
         if currentType() == TokenType.FOR {
             tokenIndex += 1
@@ -739,7 +739,7 @@ class Parser {
             tokenIndex = backtrackIndex
             return false
         }
-        astObject.array = lastCreatedQuickObject as? QuickArray
+        astObject.array = lastCreatedQuickObject as? QuickValue
         
         if currentType() == TokenType.OPENBRACE {
             tokenIndex += 1
@@ -798,7 +798,7 @@ class Parser {
     func parseIfStatement() -> Bool {
         
         let backtrackIndex = tokenIndex
-        var astObject = QuickIfStatement()
+        let astObject = QuickIfStatement()
         
         if currentType() == TokenType.IF {
             tokenIndex += 1
@@ -901,7 +901,7 @@ class Parser {
     func parseMethodCall() -> Bool {
         
         let backtrackIndex = tokenIndex
-        var astObject = QuickMethodCall()
+        let astObject = QuickMethodCall()
         
         if currentType() == TokenType.METHODNAME {
             astObject.methodName = currentToken().tokenString
@@ -948,7 +948,7 @@ class Parser {
     func parseParameters() -> Bool {
         
         let backtrackIndex = tokenIndex
-        var astObject = QuickParameters()
+        let astObject = QuickParameters()
         
         if !parseValue() && !parseLogicalExpression() {
             tokenIndex = backtrackIndex
@@ -976,7 +976,7 @@ class Parser {
     func parseArray() -> Bool {
         
         let backtrackIndex = tokenIndex
-        var astObject = QuickArray()
+        let astObject = QuickArray()
         
         if currentType() == TokenType.STARTARRAY {
             tokenIndex += 1

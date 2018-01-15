@@ -98,7 +98,7 @@ class QuickSymbolTable {
         if child != nil {
             return child!.getType(ofIdentifier: ofIdentifier)
         }
-        
+
         return "Unknown Type"
         
     }

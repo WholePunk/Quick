@@ -44,7 +44,7 @@ class QuickStatement : QuickObject {
     var parent : QuickMultilineStatement?
     
     override func printDebugDescription(withLevel: Int) {
-        for i in 0...withLevel {
+        for _ in 0...withLevel {
             Output.shared.string.append("-")
         }
         Output.shared.string.append("Quick Statement\n")
@@ -54,7 +54,11 @@ class QuickStatement : QuickObject {
     override func checkSymbols(symbolTable : QuickSymbolTable) {
         content?.checkSymbols(symbolTable: symbolTable)
     }
-
+    
+    override func execute() {
+        content?.execute()
+    }
+    
 }
 
 class QuickMultilineStatement : QuickObject {
@@ -81,8 +85,18 @@ class QuickMultilineStatement : QuickObject {
         for statement in content {
             statement.checkSymbols(symbolTable: symbolTable)
         }
-        symbolTable.printSymbolTable()
         symbolTable.popScope()
+    }
+    
+    override func execute() {
+        QuickSymbolTable.sharedRoot?.pushScope()
+        for statement in content {
+            statement.checkSymbols(symbolTable: QuickSymbolTable.sharedRoot!)
+        }
+        for statement in content {
+            statement.execute()
+        }
+        QuickSymbolTable.sharedRoot?.popScope()
     }
     
 }
@@ -102,8 +116,11 @@ class QuickString : QuickObject {
     override func getType() -> String {
         return "String"
     }
-
     
+    override func execute() {
+        QuickMemory.shared.stack.append(content)
+    }
+
 }
 
 class QuickIdentifier : QuickObject {
@@ -135,6 +152,15 @@ class QuickIdentifier : QuickObject {
         return QuickSymbolTable.sharedRoot!.getType(ofIdentifier: content)
     }
     
+    override func execute() {
+        let storedValue = QuickMemory.shared.heap[content]
+        if storedValue == nil {
+            QuickError.shared.setErrorMessage("Corrupted stack", withLine: -2)
+        } else {
+            QuickMemory.shared.stack.append(storedValue!)
+        }
+    }
+    
 }
 
 class QuickInteger : QuickObject {
@@ -143,7 +169,7 @@ class QuickInteger : QuickObject {
     var parent : QuickObject?
     
     override func printDebugDescription(withLevel: Int) {
-        for i in 0...withLevel {
+        for _ in 0...withLevel {
             Output.shared.string.append("-")
         }
         Output.shared.string.append("Quick Integer (\(content))\n")
@@ -151,6 +177,10 @@ class QuickInteger : QuickObject {
     
     override func getType() -> String {
         return "Integer"
+    }
+    
+    override func execute() {
+        QuickMemory.shared.stack.append(content)
     }
     
 }
@@ -161,7 +191,7 @@ class QuickFloat : QuickObject {
     var parent : QuickObject?
     
     override func printDebugDescription(withLevel: Int) {
-        for i in 0...withLevel {
+        for _ in 0...withLevel {
             Output.shared.string.append("-")
         }
         Output.shared.string.append("Quick Float (\(content))\n")
@@ -171,7 +201,10 @@ class QuickFloat : QuickObject {
         return "Float"
     }
 
-    
+    override func execute() {
+        QuickMemory.shared.stack.append(content)
+    }
+
 }
 
 class QuickTrue : QuickObject {
@@ -180,7 +213,7 @@ class QuickTrue : QuickObject {
     var parent : QuickObject?
     
     override func printDebugDescription(withLevel: Int) {
-        for i in 0...withLevel {
+        for _ in 0...withLevel {
             Output.shared.string.append("-")
         }
         Output.shared.string.append("Quick True\n")
@@ -190,6 +223,10 @@ class QuickTrue : QuickObject {
         return "Boolean"
     }
     
+    override func execute() {
+        QuickMemory.shared.stack.append(content)
+    }
+
 }
 
 class QuickFalse : QuickObject {
@@ -208,6 +245,10 @@ class QuickFalse : QuickObject {
         return "Boolean"
     }
     
+    override func execute() {
+        QuickMemory.shared.stack.append(content)
+    }
+
 }
 
 class QuickMathExpression : QuickObject {
@@ -216,7 +257,7 @@ class QuickMathExpression : QuickObject {
     var parent : QuickObject?
     
     override func printDebugDescription(withLevel: Int) {
-        for i in 0...withLevel {
+        for _ in 0...withLevel {
             Output.shared.string.append("-")
         }
         Output.shared.string.append("Quick Math Expression\n")
@@ -234,6 +275,10 @@ class QuickMathExpression : QuickObject {
         return ""
     }
     
+    override func execute() {
+        content?.execute()
+    }
+    
 }
 
 class QuickMathOperator : QuickObject {
@@ -242,7 +287,7 @@ class QuickMathOperator : QuickObject {
     var parent : QuickObject?
     
     override func printDebugDescription(withLevel: Int) {
-        for i in 0...withLevel {
+        for _ in 0...withLevel {
             Output.shared.string.append("-")
         }
         Output.shared.string.append("Quick Math Operator\n")
@@ -260,6 +305,10 @@ class QuickMathOperator : QuickObject {
         }
         
         return content!.getType()
+    }
+    
+    override func execute() {
+        content?.execute()
     }
     
 }
@@ -301,6 +350,22 @@ class QuickPlus : QuickObject {
         }
         
         return leftSide!.getType()
+    }
+    
+    override func execute() {
+        leftSide?.execute()
+        let leftSideValue = QuickMemory.shared.stack.popLast()
+        rightSide?.execute()
+        let rightSideValue = QuickMemory.shared.stack.popLast()
+        if getType() == "Integer" {
+            let computed = (leftSideValue as! Int) + (rightSideValue as! Int)
+            QuickMemory.shared.stack.append(computed)
+        } else if getType() == "Float" {
+            let computed = (leftSideValue as! Float) + (rightSideValue as! Float)
+            QuickMemory.shared.stack.append(computed)
+        } else {
+            QuickMemory.shared.stack.append(0)
+        }
     }
 
 }
@@ -344,6 +409,22 @@ class QuickMinus : QuickObject {
         return leftSide!.getType()
     }
     
+    override func execute() {
+        leftSide?.execute()
+        let leftSideValue = QuickMemory.shared.stack.popLast()
+        rightSide?.execute()
+        let rightSideValue = QuickMemory.shared.stack.popLast()
+        if getType() == "Integer" {
+            let computed = (leftSideValue as! Int) - (rightSideValue as! Int)
+            QuickMemory.shared.stack.append(computed)
+        } else if getType() == "Float" {
+            let computed = (leftSideValue as! Float) - (rightSideValue as! Float)
+            QuickMemory.shared.stack.append(computed)
+        } else {
+            QuickMemory.shared.stack.append(0)
+        }
+    }
+
 }
 
 class QuickMultiply : QuickObject {
@@ -353,7 +434,7 @@ class QuickMultiply : QuickObject {
     var parent : QuickObject?
     
     override func printDebugDescription(withLevel: Int) {
-        for i in 0...withLevel {
+        for _ in 0...withLevel {
             Output.shared.string.append("-")
         }
         Output.shared.string.append("Quick Multiply\n")
@@ -385,6 +466,22 @@ class QuickMultiply : QuickObject {
         return leftSide!.getType()
     }
 
+    override func execute() {
+        leftSide?.execute()
+        let leftSideValue = QuickMemory.shared.stack.popLast()
+        rightSide?.execute()
+        let rightSideValue = QuickMemory.shared.stack.popLast()
+        if getType() == "Integer" {
+            let computed = (leftSideValue as! Int) * (rightSideValue as! Int)
+            QuickMemory.shared.stack.append(computed)
+        } else if getType() == "Float" {
+            let computed = (leftSideValue as! Float) * (rightSideValue as! Float)
+            QuickMemory.shared.stack.append(computed)
+        } else {
+            QuickMemory.shared.stack.append(0)
+        }
+    }
+
 }
 
 class QuickDivide : QuickObject {
@@ -394,7 +491,7 @@ class QuickDivide : QuickObject {
     var parent : QuickObject?
     
     override func printDebugDescription(withLevel: Int) {
-        for i in 0...withLevel {
+        for _ in 0...withLevel {
             Output.shared.string.append("-")
         }
         Output.shared.string.append("Quick Divide\n")
@@ -426,6 +523,22 @@ class QuickDivide : QuickObject {
         return leftSide!.getType()
     }
 
+    override func execute() {
+        leftSide?.execute()
+        let leftSideValue = QuickMemory.shared.stack.popLast()
+        rightSide?.execute()
+        let rightSideValue = QuickMemory.shared.stack.popLast()
+        if getType() == "Integer" {
+            let computed = (leftSideValue as! Int) / (rightSideValue as! Int)
+            QuickMemory.shared.stack.append(computed)
+        } else if getType() == "Float" {
+            let computed = (leftSideValue as! Float) / (rightSideValue as! Float)
+            QuickMemory.shared.stack.append(computed)
+        } else {
+            QuickMemory.shared.stack.append(0)
+        }
+    }
+
 }
 
 class QuickMod : QuickObject {
@@ -435,7 +548,7 @@ class QuickMod : QuickObject {
     var parent : QuickObject?
     
     override func printDebugDescription(withLevel: Int) {
-        for i in 0...withLevel {
+        for _ in 0...withLevel {
             Output.shared.string.append("-")
         }
         Output.shared.string.append("Quick Mod\n")
@@ -467,6 +580,22 @@ class QuickMod : QuickObject {
         return leftSide!.getType()
     }
 
+    override func execute() {
+        leftSide?.execute()
+        let leftSideValue = QuickMemory.shared.stack.popLast()
+        rightSide?.execute()
+        let rightSideValue = QuickMemory.shared.stack.popLast()
+        if getType() == "Integer" {
+            let computed = (leftSideValue as! Int) % (rightSideValue as! Int)
+            QuickMemory.shared.stack.append(computed)
+        } else if getType() == "Float" {
+            let computed = (leftSideValue as! Float).truncatingRemainder(dividingBy: (rightSideValue as! Float))
+            QuickMemory.shared.stack.append(computed)
+        } else {
+            QuickMemory.shared.stack.append(0)
+        }
+    }
+
 }
 
 class QuickEqual : QuickObject {
@@ -476,7 +605,7 @@ class QuickEqual : QuickObject {
     var parent : QuickObject?
     
     override func printDebugDescription(withLevel: Int) {
-        for i in 0...withLevel {
+        for _ in 0...withLevel {
             Output.shared.string.append("-")
         }
         Output.shared.string.append("Quick Equal\n")
@@ -499,6 +628,37 @@ class QuickEqual : QuickObject {
         }
 
     }
+    
+    override func getType() -> String {
+        
+        guard leftSide != nil else {
+            return ""
+        }
+        
+        return leftSide!.getType()
+    }
+
+    override func execute() {
+        leftSide?.execute()
+        let leftSideValue = QuickMemory.shared.stack.popLast()
+        rightSide?.execute()
+        let rightSideValue = QuickMemory.shared.stack.popLast()
+        if getType() == "Integer" {
+            let result = (leftSideValue as! Int) == (rightSideValue as! Int)
+            QuickMemory.shared.stack.append(result)
+        } else if getType() == "Float" {
+            let result = (leftSideValue as! Float) == (rightSideValue as! Float)
+            QuickMemory.shared.stack.append(result)
+        } else if getType() == "String" {
+            let result = (leftSideValue as! String) == (rightSideValue as! String)
+            QuickMemory.shared.stack.append(result)
+        } else if getType() == "Boolean" {
+            let result = (leftSideValue as! Bool) == (rightSideValue as! Bool)
+            QuickMemory.shared.stack.append(result)
+        } else {
+            QuickMemory.shared.stack.append(false)
+        }
+    }
 
 }
 
@@ -509,7 +669,7 @@ class QuickNotEqual : QuickObject {
     var parent : QuickObject?
     
     override func printDebugDescription(withLevel: Int) {
-        for i in 0...withLevel {
+        for _ in 0...withLevel {
             Output.shared.string.append("-")
         }
         Output.shared.string.append("Quick Not Equal\n")
@@ -532,6 +692,35 @@ class QuickNotEqual : QuickObject {
         }
     }
 
+    override func getType() -> String {
+        
+        guard leftSide != nil else {
+            return ""
+        }
+        
+        return leftSide!.getType()
+    }
+
+    override func execute() {
+        leftSide?.execute()
+        let leftSideValue = QuickMemory.shared.stack.popLast()
+        rightSide?.execute()
+        let rightSideValue = QuickMemory.shared.stack.popLast()
+        if getType() == "Integer" {
+            let result = (leftSideValue as! Int) != (rightSideValue as! Int)
+            QuickMemory.shared.stack.append(result)
+        } else if getType() == "Float" {
+            let result = (leftSideValue as! Float) != (rightSideValue as! Float)
+            QuickMemory.shared.stack.append(result)
+        } else if getType() == "String" {
+            let result = (leftSideValue as! String) != (rightSideValue as! String)
+            QuickMemory.shared.stack.append(result)
+        } else if getType() == "Boolean" {
+            let result = (leftSideValue as! Bool) != (rightSideValue as! Bool)
+            QuickMemory.shared.stack.append(result)
+        }
+    }
+
 }
 
 class QuickLessThan : QuickObject {
@@ -541,7 +730,7 @@ class QuickLessThan : QuickObject {
     var parent : QuickObject?
     
     override func printDebugDescription(withLevel: Int) {
-        for i in 0...withLevel {
+        for _ in 0...withLevel {
             Output.shared.string.append("-")
         }
         Output.shared.string.append("Quick Less Than\n")
@@ -561,6 +750,29 @@ class QuickLessThan : QuickObject {
         let rightType = rightSide!.getType()
         if leftType != rightType {
             QuickError.shared.setErrorMessage("Type \(leftType) and type \(rightType) do not match", withLine: -2)
+        }
+    }
+
+    override func getType() -> String {
+        
+        guard leftSide != nil else {
+            return ""
+        }
+        
+        return leftSide!.getType()
+    }
+
+    override func execute() {
+        leftSide?.execute()
+        let leftSideValue = QuickMemory.shared.stack.popLast()
+        rightSide?.execute()
+        let rightSideValue = QuickMemory.shared.stack.popLast()
+        if getType() == "Integer" {
+            let result = (leftSideValue as! Int) < (rightSideValue as! Int)
+            QuickMemory.shared.stack.append(result)
+        } else if getType() == "Float" {
+            let result = (leftSideValue as! Float) < (rightSideValue as! Float)
+            QuickMemory.shared.stack.append(result)
         }
     }
 
@@ -596,6 +808,29 @@ class QuickGreaterThan : QuickObject {
         }
     }
 
+    override func getType() -> String {
+        
+        guard leftSide != nil else {
+            return ""
+        }
+        
+        return leftSide!.getType()
+    }
+
+    override func execute() {
+        leftSide?.execute()
+        let leftSideValue = QuickMemory.shared.stack.popLast()
+        rightSide?.execute()
+        let rightSideValue = QuickMemory.shared.stack.popLast()
+        if getType() == "Integer" {
+            let result = (leftSideValue as! Int) > (rightSideValue as! Int)
+            QuickMemory.shared.stack.append(result)
+        } else if getType() == "Float" {
+            let result = (leftSideValue as! Float) > (rightSideValue as! Float)
+            QuickMemory.shared.stack.append(result)
+        }
+    }
+
 }
 
 class QuickLessThanOrEqualTo : QuickObject {
@@ -628,6 +863,29 @@ class QuickLessThanOrEqualTo : QuickObject {
         }
     }
 
+    override func getType() -> String {
+        
+        guard leftSide != nil else {
+            return ""
+        }
+        
+        return leftSide!.getType()
+    }
+
+    override func execute() {
+        leftSide?.execute()
+        let leftSideValue = QuickMemory.shared.stack.popLast()
+        rightSide?.execute()
+        let rightSideValue = QuickMemory.shared.stack.popLast()
+        if getType() == "Integer" {
+            let result = (leftSideValue as! Int) <= (rightSideValue as! Int)
+            QuickMemory.shared.stack.append(result)
+        } else if getType() == "Float" {
+            let result = (leftSideValue as! Float) <= (rightSideValue as! Float)
+            QuickMemory.shared.stack.append(result)
+        }
+    }
+
 }
 
 class QuickGreaterThanOrEqualTo : QuickObject {
@@ -657,6 +915,29 @@ class QuickGreaterThanOrEqualTo : QuickObject {
         let rightType = rightSide!.getType()
         if leftType != rightType {
             QuickError.shared.setErrorMessage("Type \(leftType) and type \(rightType) do not match", withLine: -2)
+        }
+    }
+
+    override func getType() -> String {
+        
+        guard leftSide != nil else {
+            return ""
+        }
+        
+        return leftSide!.getType()
+    }
+
+    override func execute() {
+        leftSide?.execute()
+        let leftSideValue = QuickMemory.shared.stack.popLast()
+        rightSide?.execute()
+        let rightSideValue = QuickMemory.shared.stack.popLast()
+        if getType() == "Integer" {
+            let result = (leftSideValue as! Int) >= (rightSideValue as! Int)
+            QuickMemory.shared.stack.append(result)
+        } else if getType() == "Float" {
+            let result = (leftSideValue as! Float) >= (rightSideValue as! Float)
+            QuickMemory.shared.stack.append(result)
         }
     }
 
@@ -696,6 +977,24 @@ class QuickAnd : QuickObject {
 
     }
 
+    override func getType() -> String {
+        
+        guard leftSide != nil else {
+            return ""
+        }
+        
+        return leftSide!.getType()
+    }
+
+    override func execute() {
+        leftSide?.execute()
+        let leftSideValue = QuickMemory.shared.stack.popLast()
+        rightSide?.execute()
+        let rightSideValue = QuickMemory.shared.stack.popLast()
+        let result = (leftSideValue as! Bool) && (rightSideValue as! Bool)
+        QuickMemory.shared.stack.append(result)
+    }
+
 }
 
 class QuickOr : QuickObject {
@@ -731,6 +1030,24 @@ class QuickOr : QuickObject {
         }
     }
 
+    override func getType() -> String {
+        
+        guard leftSide != nil else {
+            return ""
+        }
+        
+        return leftSide!.getType()
+    }
+
+    override func execute() {
+        leftSide?.execute()
+        let leftSideValue = QuickMemory.shared.stack.popLast()
+        rightSide?.execute()
+        let rightSideValue = QuickMemory.shared.stack.popLast()
+        let result = (leftSideValue as! Bool) || (rightSideValue as! Bool)
+        QuickMemory.shared.stack.append(result)
+    }
+
 }
 
 class QuickNot : QuickObject {
@@ -739,7 +1056,7 @@ class QuickNot : QuickObject {
     var parent : QuickObject?
     
     override func printDebugDescription(withLevel: Int) {
-        for i in 0...withLevel {
+        for _ in 0...withLevel {
             Output.shared.string.append("-")
         }
         Output.shared.string.append("Quick Not\n")
@@ -757,6 +1074,22 @@ class QuickNot : QuickObject {
         if rightType != "Boolean" {
             QuickError.shared.setErrorMessage("Type \(rightType) is not a boolean", withLine: -2)
         }
+    }
+
+    override func getType() -> String {
+        
+        guard rightSide != nil else {
+            return ""
+        }
+        
+        return rightSide!.getType()
+    }
+
+    override func execute() {
+        rightSide?.execute()
+        let rightSideValue = QuickMemory.shared.stack.popLast()
+        let result = !(rightSideValue as! Bool)
+        QuickMemory.shared.stack.append(result)
     }
 
 }
@@ -781,6 +1114,10 @@ class QuickLogicalExpression : QuickObject {
     override func getType() -> String {
         return "Boolean"
     }
+    
+    override func execute() {
+        content?.execute()
+    }
 
 }
 
@@ -790,7 +1127,7 @@ class QuickParameters : QuickObject {
     var parent : QuickObject?
     
     override func printDebugDescription(withLevel: Int) {
-        for i in 0...withLevel {
+        for _ in 0...withLevel {
             Output.shared.string.append("-")
         }
         Output.shared.string.append("Quick Parameters\n")
@@ -805,9 +1142,18 @@ class QuickParameters : QuickObject {
         }
     }
 
-    
+    override func execute() {
+        var computed : Array<Any> = []
+        for parameter in parameters {
+            parameter.execute()
+            computed.append(QuickMemory.shared.stack.popLast()!)
+        }
+        QuickMemory.shared.stack.append(computed)
+    }
+
 }
 
+// TODO EXECUTE
 class QuickMethodCall : QuickObject {
     
     var methodName = ""
@@ -815,7 +1161,7 @@ class QuickMethodCall : QuickObject {
     var parent : QuickObject?
     
     override func printDebugDescription(withLevel: Int) {
-        for i in 0...withLevel {
+        for _ in 0...withLevel {
             Output.shared.string.append("-")
         }
         Output.shared.string.append("Quick Method Call = \(methodName)\n")
@@ -827,7 +1173,10 @@ class QuickMethodCall : QuickObject {
         parameters?.checkSymbols(symbolTable: symbolTable)
     }
 
-    
+    override func execute() {
+        parameters?.execute()
+    }
+
 }
 
 class QuickProperty : QuickObject {
@@ -836,7 +1185,7 @@ class QuickProperty : QuickObject {
     var parent : QuickObject?
     
     override func printDebugDescription(withLevel: Int) {
-        for i in 0...withLevel {
+        for _ in 0...withLevel {
             Output.shared.string.append("-")
         }
         Output.shared.string.append("Quick Property\n")
@@ -857,8 +1206,19 @@ class QuickProperty : QuickObject {
         }
     }
 
+    override func execute() {
+        
+        var propertyString = ""
+        for obj in content {
+            if propertyString != "" {
+                propertyString.append(".")
+            }
+            propertyString.append(obj.content)
+        }
+        QuickMemory.shared.stack.append(propertyString)
+        
+    }
 
-    
 }
 
 class QuickValue : QuickObject {
@@ -867,7 +1227,7 @@ class QuickValue : QuickObject {
     var parent : QuickObject?
     
     override func printDebugDescription(withLevel: Int) {
-        for i in 0...withLevel {
+        for _ in 0...withLevel {
             Output.shared.string.append("-")
         }
         Output.shared.string.append("Quick Value\n")
@@ -889,7 +1249,10 @@ class QuickValue : QuickObject {
         return ""
     }
 
-    
+    override func execute() {
+        content?.execute()
+    }
+
 }
 
 class QuickAssignment : QuickObject {
@@ -899,7 +1262,7 @@ class QuickAssignment : QuickObject {
     var parent : QuickStatement?
     
     override func printDebugDescription(withLevel: Int) {
-        for i in 0...withLevel {
+        for _ in 0...withLevel {
             Output.shared.string.append("-")
         }
         Output.shared.string.append("Quick Assignment\n")
@@ -923,6 +1286,17 @@ class QuickAssignment : QuickObject {
         
     }
 
+    override func execute() {
+        leftSide?.execute()
+        let leftSideResult = QuickMemory.shared.stack.popLast()
+        rightSide?.execute()
+        let rightSideResult = QuickMemory.shared.stack.popLast()
+        if rightSideResult != nil && (leftSideResult as? String) != nil {
+            QuickMemory.shared.heap[leftSideResult as! String] = rightSideResult!
+        } else {
+            QuickError.shared.setErrorMessage("Bad value from stack during assignment", withLine: -2)
+        }
+    }
     
 }
 
@@ -932,7 +1306,7 @@ class QuickArray : QuickObject {
     var parent : QuickObject?
     
     override func printDebugDescription(withLevel: Int) {
-        for i in 0...withLevel {
+        for _ in 0...withLevel {
             Output.shared.string.append("-")
         }
         Output.shared.string.append("Quick Array\n")
@@ -947,6 +1321,9 @@ class QuickArray : QuickObject {
         return "Array"
     }
 
+    override func execute() {
+        parameters?.execute()
+    }
     
 }
 
@@ -957,7 +1334,7 @@ class QuickIfStatement : QuickObject {
     var parent : QuickObject?
     
     override func printDebugDescription(withLevel: Int) {
-        for i in 0...withLevel {
+        for _ in 0...withLevel {
             Output.shared.string.append("-")
         }
         Output.shared.string.append("Quick If Statement\n")
@@ -974,18 +1351,26 @@ class QuickIfStatement : QuickObject {
         executionBlock?.checkSymbols(symbolTable: symbolTable)
     }
 
+    override func execute() {
+        
+        expression?.execute()
+        let expressionResult = QuickMemory.shared.stack.popLast() as! Bool
+        if expressionResult {
+            executionBlock?.execute()
+        }
+    }
     
 }
 
 class QuickForLoop : QuickObject {
     
     var identifier : QuickIdentifier?
-    var array : QuickArray?
+    var array : QuickValue?
     var executionBlock : QuickMultilineStatement?
     var parent : QuickObject?
     
     override func printDebugDescription(withLevel: Int) {
-        for i in 0...withLevel {
+        for _ in 0...withLevel {
             Output.shared.string.append("-")
         }
         Output.shared.string.append("Quick For Loop\n")
@@ -1001,6 +1386,17 @@ class QuickForLoop : QuickObject {
         executionBlock?.checkSymbols(symbolTable: symbolTable)
     }
 
+    override func execute() {
+
+        array?.execute()
+        let collection = QuickMemory.shared.stack.popLast() as! Array<Any>
+        for obj in collection {
+            QuickMemory.shared.heap[identifier!.content] = obj
+            executionBlock?.execute()
+        }
+
+    }
+
 }
 
 class QuickWhileLoop : QuickObject {
@@ -1010,7 +1406,7 @@ class QuickWhileLoop : QuickObject {
     var parent : QuickObject?
     
     override func printDebugDescription(withLevel: Int) {
-        for i in 0...withLevel {
+        for _ in 0...withLevel {
             Output.shared.string.append("-")
         }
         Output.shared.string.append("Quick While Loop\n")
@@ -1023,6 +1419,15 @@ class QuickWhileLoop : QuickObject {
         executionBlock?.checkSymbols(symbolTable: symbolTable)
     }
 
-    
-}
+    override func execute() {
+        
+        expression?.execute()
+        var expressionResult = QuickMemory.shared.stack.popLast() as! Bool
+        while expressionResult {
+            executionBlock?.execute()
+            expression?.execute()
+            expressionResult = QuickMemory.shared.stack.popLast() as! Bool
+        }
+    }
 
+}

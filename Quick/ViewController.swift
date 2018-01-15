@@ -35,6 +35,8 @@ class ViewController: UIViewController {
         print(Output.shared.string)
         parser.symbolTable.printSymbolTable()
 
+        parser.root.execute()
+        print("Heap: \(QuickMemory.shared.heap)")
         
     }
     
