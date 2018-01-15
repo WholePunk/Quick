@@ -1,7 +1,22 @@
-- Execute code live on AST
-    √ Implement execute() functions for all AST objects
-    - Add code execution by calling external symbols
+- Integrate into a codeless branch
+    - Create an action for writing quick code
+    - Show an editor
+    - Export all local symbols when showing an editor
+    - Run the code when the action is run
+
+- Allow setting properties on external symbols
+
+- Add code execution by calling external symbols
+    - Allow registering of methods by registering name, argument types, return type, target and action
+    - Parse check to make sure that method calls are for valid-ly registered methods
+    - Typecheck to make sure that method calls are being passed valid arguments
+    - Typecheck to make sure that method calls return values are valid
+    - When the method is executed, dispatch to the correct external method
+
+----------------------------- DECISION -------------------------------------------------------
+
 - Add swift generation
 - Add syntax highlighting
 - Add auto-indentation
+- Add auto-complete
 - Write a fuckton more tests
