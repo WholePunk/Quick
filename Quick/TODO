@@ -1,20 +1,11 @@
-- Integrate into a codeless branch
-    - Create an action for writing quick code
-    - Show an editor
-    - Export all local symbols when showing an editor
-    - Run the code when the action is run
-
+√ Add method for print
 - Allow setting properties on external symbols
-
-- Add code execution by calling external symbols
-    - Allow registering of methods by registering name, argument types, return type, target and action
-    - Parse check to make sure that method calls are for valid-ly registered methods
-    - Typecheck to make sure that method calls are being passed valid arguments
-    - Typecheck to make sure that method calls return values are valid
-    - When the method is executed, dispatch to the correct external method
+- Allow getting properties from external symbols
+- Add method for getJSON
 
 ----------------------------- DECISION -------------------------------------------------------
 
+- Add arbitrary properties to objects to allow for scope
 - Add swift generation
 - Add syntax highlighting
 - Add auto-indentation

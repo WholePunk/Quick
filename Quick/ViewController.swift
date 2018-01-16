@@ -11,6 +11,7 @@ import UIKit
 class ViewController: UIViewController {
 
     @IBOutlet weak var source: UITextView!
+    @IBOutlet weak var output: UITextView!
     
     override func viewDidAppear(_ animated: Bool) {
         source.becomeFirstResponder()
@@ -37,6 +38,10 @@ class ViewController: UIViewController {
 
         parser.root.execute()
         print("Heap: \(QuickMemory.shared.heap)")
+        
+        output.text = Output.shared.userVisible
+        
+        source.resignFirstResponder()
         
     }
     

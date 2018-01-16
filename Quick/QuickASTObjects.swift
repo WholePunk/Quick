@@ -1153,7 +1153,6 @@ class QuickParameters : QuickObject {
 
 }
 
-// TODO EXECUTE
 class QuickMethodCall : QuickObject {
     
     var methodName = ""
@@ -1174,7 +1173,19 @@ class QuickMethodCall : QuickObject {
     }
 
     override func execute() {
-        parameters?.execute()
+        if methodName == "print" {
+            executePrintWithParameters(parameters!)
+        }
+    }
+    
+    func executePrintWithParameters(_ parameters : QuickParameters) {
+        
+        for parameter in parameters.parameters {
+            parameter.execute()
+            let valueToPrint = QuickMemory.shared.stack.popLast()!
+            Output.shared.userVisible.append("\(valueToPrint)\n")
+        }
+        
     }
 
 }

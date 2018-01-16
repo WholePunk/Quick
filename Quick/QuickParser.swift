@@ -34,6 +34,8 @@ class Parser {
     
     func parse(fromSource: String) -> Bool {
         
+        symbolTable.addSymbol("print", ofType: "String")
+        
         QuickSymbolTable.sharedRoot = symbolTable
         Output.shared.string = ""
         QuickMemory.shared.reset()
@@ -162,7 +164,8 @@ class Parser {
             }
         } else if parseMethodCall() {
             if currentType() == TokenType.NEWLINE {
-                astObject.parent?.addStatement(astObject)
+                astObject.content = lastCreatedQuickObject as? QuickMethodCall
+                lastCreatedQuickObject = astObject
                 currentLine += 1
                 tokenIndex += 1
                 return true
