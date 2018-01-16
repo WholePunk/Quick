@@ -24,6 +24,10 @@ class QuickError {
         errorLine = -1
     }
     
+    func errorHappened() -> Bool {
+        return errorLine != -1
+    }
+    
     func setErrorMessage(_ message : String, withLine: Int) {
         
         guard errorLine == -1 else {
