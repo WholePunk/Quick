@@ -354,13 +354,19 @@ class QuickPlus : QuickObject {
     
     override func execute() {
         leftSide?.execute()
-        let leftSideValue = QuickMemory.shared.stack.popLast()
+        var leftSideValue = QuickMemory.shared.stack.popLast()
         rightSide?.execute()
-        let rightSideValue = QuickMemory.shared.stack.popLast()
+        var rightSideValue = QuickMemory.shared.stack.popLast()
         if getType() == "Integer" {
             let computed = (leftSideValue as! Int) + (rightSideValue as! Int)
             QuickMemory.shared.stack.append(computed)
         } else if getType() == "Float" {
+            if leftSideValue is CGFloat {
+                leftSideValue = Float(leftSideValue as! CGFloat)
+            }
+            if rightSideValue is CGFloat {
+                rightSideValue = Float(rightSideValue as! CGFloat)
+            }
             let computed = (leftSideValue as! Float) + (rightSideValue as! Float)
             QuickMemory.shared.stack.append(computed)
         } else {
@@ -1290,10 +1296,15 @@ class QuickAssignment : QuickObject {
             return
         }
         
+        var leftSideString = ""
         for identifier in leftSide!.content {
-            let type = rightSide!.getType()
-            symbolTable.checkType(type, ofIdentifier: identifier.content)
+            if leftSideString != "" {
+                leftSideString.append(".")
+            }
+            leftSideString.append(identifier.content)
         }
+        let type = rightSide!.getType()
+        symbolTable.checkType(type, ofIdentifier: leftSideString)
         
     }
 
@@ -1303,6 +1314,15 @@ class QuickAssignment : QuickObject {
         rightSide?.execute()
         let rightSideResult = QuickMemory.shared.stack.popLast()
         if rightSideResult != nil && (leftSideResult as? String) != nil {
+            // Check to see if left side result is an external symbol, set directly if it is
+            if QuickSymbolTable.externalSymbols[leftSideResult as! String] != nil {
+                let propertyId = (leftSideResult as! NSString).components(separatedBy: ".").last! // Update with the actual property derived from left side result
+                DispatchQueue.main.async {
+                    (QuickSymbolTable.externalSymbols[leftSideResult as! String] as? ViewRenderer)?.updateViewProperty(forIdentifier: propertyId, withNewValue: rightSideResult, withDuration: 0.3)
+                    (QuickSymbolTable.externalSymbols[leftSideResult as! String] as? ViewRenderer)?.render()
+                }
+            }
+            // Not an external symbol, assign it in the heap
             QuickMemory.shared.heap[leftSideResult as! String] = rightSideResult!
         } else {
             QuickError.shared.setErrorMessage("Bad value from stack during assignment", withLine: -2)

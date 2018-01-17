@@ -38,7 +38,6 @@ class Parser {
         
         QuickSymbolTable.sharedRoot = symbolTable
         Output.shared.string = ""
-        QuickMemory.shared.reset()
         self.tokens = Tokenizer().tokens(fromSource: fromSource)
         
         lastCreatedQuickObject = root

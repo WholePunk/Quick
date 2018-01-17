@@ -176,7 +176,7 @@ class Tokenizer {
                 }
                 
                 if currentToken == TokenType.IDENTIFIER {
-                    if (CharacterSet.alphanumerics as NSCharacterSet).characterIsMember(character) {
+                    if (CharacterSet.alphanumerics as NSCharacterSet).characterIsMember(character) || asCharacter == "." {
                         currentToken = TokenType.IDENTIFIER
                     } else if asCharacter == "_" {
                         currentToken = TokenType.IDENTIFIER
@@ -200,12 +200,6 @@ class Tokenizer {
                         popLastCharacter()
                         commitToken()
                         currentToken = TokenType.ENDARRAY
-                        commitToken()
-                    } else if asCharacter == "." {
-                        popLastCharacter()
-                        
-                        commitToken()
-                        currentToken = TokenType.DOT
                         commitToken()
                     } else {
                         currentToken = TokenType.ERROR
