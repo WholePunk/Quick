@@ -883,17 +883,6 @@ class Parser {
         astObject.content.append(identifierObject)
         
         tokenIndex += 1
-        if currentType() == TokenType.DOT {
-            tokenIndex += 1
-            if parseProperty() {
-                let recursiveObject = lastCreatedQuickObject as? QuickProperty
-                if recursiveObject != nil {
-                    for identifier in recursiveObject!.content {
-                        astObject.content.append(identifier)
-                    }
-                }
-            }
-        }
         
         lastCreatedQuickObject = astObject
         return true
@@ -990,6 +979,25 @@ class Parser {
         if currentType() == TokenType.ENDARRAY {
             tokenIndex += 1
             lastCreatedQuickObject = astObject
+            
+            if currentType() == TokenType.STARTARRAY {
+                tokenIndex += 1
+            } else {
+                return true // No subscript, we're done here
+            }
+            
+            if !parseValue() {
+                tokenIndex = backtrackIndex
+                return false
+            }
+            astObject.subscriptValue = lastCreatedQuickObject as? QuickValue
+            
+            if currentType() != TokenType.ENDARRAY {
+                tokenIndex = backtrackIndex
+                return false
+            }
+            tokenIndex += 1
+            
             return true
         } else {
             
@@ -1006,6 +1014,26 @@ class Parser {
                 return false
             }
             
+            if currentType() == TokenType.STARTARRAY {
+                tokenIndex += 1
+            } else {
+                lastCreatedQuickObject = astObject 
+                return true // No subscript, we're done here
+            }
+            
+            if !parseValue() {
+                tokenIndex = backtrackIndex
+                return false
+            }
+            astObject.subscriptValue = lastCreatedQuickObject as? QuickValue
+            
+            
+            if currentType() != TokenType.ENDARRAY {
+                tokenIndex = backtrackIndex
+                return false
+            }
+            tokenIndex += 1
+
             lastCreatedQuickObject = astObject
             return true
             

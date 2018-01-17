@@ -1334,6 +1334,7 @@ class QuickAssignment : QuickObject {
 class QuickArray : QuickObject {
     
     var parameters : QuickParameters?
+    var subscriptValue : QuickValue?
     var parent : QuickObject?
     
     override func printDebugDescription(withLevel: Int) {
@@ -1342,10 +1343,18 @@ class QuickArray : QuickObject {
         }
         Output.shared.string.append("Quick Array\n")
         parameters?.printDebugDescription(withLevel: withLevel + 1)
+        subscriptValue?.printDebugDescription(withLevel: withLevel + 1)
     }
     
     override func checkSymbols(symbolTable : QuickSymbolTable) {
         parameters?.checkSymbols(symbolTable: symbolTable)
+        
+        if subscriptValue != nil {
+            let subscriptType = subscriptValue!.getType()
+            if subscriptType != "Integer" {
+                QuickError.shared.setErrorMessage("Type \(subscriptType) is not an Integer", withLine: -2)
+            }
+        }
     }
 
     override func getType() -> String {
@@ -1354,6 +1363,18 @@ class QuickArray : QuickObject {
 
     override func execute() {
         parameters?.execute()
+        
+        if subscriptValue != nil {
+            let parametersArray = QuickMemory.shared.stack.popLast() as! Array<Any>
+            subscriptValue?.execute()
+            let subscriptInt = QuickMemory.shared.stack.popLast() as! Int
+            if subscriptInt >= parametersArray.count {
+                QuickError.shared.setErrorMessage("Array index is out of bounds", withLine: -2)
+            }
+            QuickMemory.shared.stack.append(parametersArray[subscriptInt])
+        }
+
+        
     }
     
 }

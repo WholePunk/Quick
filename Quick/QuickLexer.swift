@@ -40,7 +40,6 @@ enum TokenType {
     case CLOSEARGUMENTS
     case ARGUMENTSEPERATOR
     case NEWLINE
-    case DOT
     case TRUE
     case FALSE
     case AND
@@ -71,6 +70,7 @@ class Tokenizer {
     var currentTokenString = ""
     var currentToken = TokenType.NONE
     var inString = false
+    var inSubscript = true
     var tokens : Array<Token> = []
     var currentLine = 0
     
