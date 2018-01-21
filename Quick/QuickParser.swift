@@ -35,7 +35,9 @@ class Parser {
     func parse(fromSource: String) -> Bool {
         
         symbolTable.addSymbol("print", ofType: "String")
-        
+        symbolTable.addSymbol("getJSONArray", ofType: "Array")
+        symbolTable.addSymbol("getJSONDictionary", ofType: "Dictionary")
+
         QuickSymbolTable.sharedRoot = symbolTable
         Output.shared.string = ""
         self.tokens = Tokenizer().tokens(fromSource: fromSource)
@@ -754,11 +756,7 @@ class Parser {
         }
         
         if parseIdentifier() {
-            let identifierObject = lastCreatedQuickObject as! QuickIdentifier
-            identifierObject.content = currentToken().tokenString
-            identifierObject.parent = astObject
-            astObject.identifier = identifierObject
-            tokenIndex += 1
+            astObject.identifier = lastCreatedQuickObject as! QuickIdentifier
         } else {
             tokenIndex = backtrackIndex
             return false

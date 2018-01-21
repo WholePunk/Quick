@@ -76,6 +76,12 @@ class Tokenizer {
     var currentLine = 0
     
     func commitToken() {
+
+        if currentToken == TokenType.STRING {
+            // Remove the first and last characters, as they're extraneous quotes
+            currentTokenString = currentTokenString.substring(from: currentTokenString.characters.index(currentTokenString.startIndex, offsetBy: 1))
+            currentTokenString = currentTokenString.substring(to: currentTokenString.characters.index(currentTokenString.endIndex, offsetBy: -1))
+        }
         
         let token = Token()
         token.tokenType = currentToken

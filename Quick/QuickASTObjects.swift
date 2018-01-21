@@ -1225,6 +1225,12 @@ class QuickMethodCall : QuickObject {
         if methodName == "print" {
             executePrintWithParameters(parameters!)
         }
+        if methodName == "getJSONArray" {
+            executeGetJSONArrayWithParameters(parameters!)
+        }
+        if methodName == "getJSONDictionary" {
+            executeGetJSONDictionaryWithParameters(parameters!)
+        }
     }
     
     func executePrintWithParameters(_ parameters : QuickParameters) {
@@ -1234,6 +1240,100 @@ class QuickMethodCall : QuickObject {
             let valueToPrint = QuickMemory.shared.stack.popLast()!
             Output.shared.userVisible.append("\(valueToPrint)\n")
         }
+        
+    }
+
+    func executeGetJSONArrayWithParameters(_ parameters : QuickParameters) {
+        
+        if parameters.parameters.count > 1 || parameters.parameters.count == 0 {
+            QuickMemory.shared.stack.append([])
+            return
+        }
+        
+        // We only have a single parameter
+        let parameter = parameters.parameters[0]
+        parameter.execute()
+        let parameterValue = QuickMemory.shared.stack.popLast()
+        
+        guard parameterValue as? String != nil else {
+            QuickMemory.shared.stack.append([])
+            return
+        }
+        
+        let url = URL(string: parameterValue as! String)
+        guard url != nil else {
+            QuickMemory.shared.stack.append([])
+            return
+        }
+        
+        var data : Data?
+        var response : URLResponse?
+        var error : Error?
+        (data, response, error) = URLSession.shared.synchronousDataTask(with: url!)
+        
+        if error != nil {
+            QuickMemory.shared.stack.append([])
+            return
+        }
+        
+        do {
+            if let data = data,
+                let json = try JSONSerialization.jsonObject(with: data) as? [Any] {
+                QuickMemory.shared.stack.append(json)
+                return
+            }
+        } catch {
+            print("Error deserializing JSON")
+        }
+        
+        QuickMemory.shared.stack.append([])
+
+    }
+    
+    func executeGetJSONDictionaryWithParameters(_ parameters : QuickParameters) {
+        
+        if parameters.parameters.count > 1 || parameters.parameters.count == 0 {
+            QuickMemory.shared.stack.append([:])
+            return
+        }
+        
+        // We only have a single parameter
+        let parameter = parameters.parameters[0]
+        parameter.execute()
+        let parameterValue = QuickMemory.shared.stack.popLast()
+        
+        guard parameterValue as? String != nil else {
+            QuickMemory.shared.stack.append([:])
+            return
+        }
+        
+        let url = URL(string: parameterValue as! String)
+        guard url != nil else {
+            QuickMemory.shared.stack.append([:])
+            return
+        }
+        
+        var data : Data?
+        var response : URLResponse?
+        var error : Error?
+        (data, response, error) = URLSession.shared.synchronousDataTask(with: url!)
+        
+        if error != nil {
+            QuickMemory.shared.stack.append([:])
+            return
+        }
+        
+        do {
+            if let data = data,
+                let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                QuickMemory.shared.stack.append(json)
+                return
+            }
+        } catch {
+            print("Error deserializing JSON")
+        }
+
+        QuickMemory.shared.stack.append([:])
         
     }
 
@@ -1618,3 +1718,28 @@ class QuickWhileLoop : QuickObject {
     }
 
 }
+
+// Thanks to https://stackoverflow.com/a/34308158/3266978
+extension URLSession {
+    func synchronousDataTask(with url: URL) -> (Data?, URLResponse?, Error?) {
+        var data: Data?
+        var response: URLResponse?
+        var error: Error?
+        
+        let semaphore = DispatchSemaphore(value: 0)
+        
+        let dataTask = self.dataTask(with: url) {
+            data = $0
+            response = $1
+            error = $2
+            
+            semaphore.signal()
+        }
+        dataTask.resume()
+        
+        _ = semaphore.wait(timeout: .distantFuture)
+        
+        return (data, response, error)
+    }
+}
+
