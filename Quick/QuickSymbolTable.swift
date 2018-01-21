@@ -89,7 +89,7 @@ class QuickSymbolTable {
         }
         
     }
-
+        
     func getType(ofIdentifier : String) -> String {
         
         if self.symbols[ofIdentifier] != nil {

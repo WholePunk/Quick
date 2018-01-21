@@ -70,6 +70,7 @@ class Parser {
     func parseMultilineStatement() -> Bool {
         
         let astObject = QuickMultilineStatement()
+        let backtrackIndex = tokenIndex
         
         if currentType() == TokenType.EOF {
             lastCreatedQuickObject = astObject
@@ -99,8 +100,12 @@ class Parser {
         }
         
         if parseMultilineStatement() {
-            let recursiveObject = lastCreatedQuickObject as! QuickMultilineStatement
-            for statement in recursiveObject.content {
+            let recursiveObject = lastCreatedQuickObject as? QuickMultilineStatement
+            if recursiveObject == nil {
+                tokenIndex = backtrackIndex
+                return false
+            }
+            for statement in recursiveObject!.content {
                 astObject.addStatement(statement)
             }
         }
@@ -762,6 +767,43 @@ class Parser {
             return false
         }
         
+        if currentType() == TokenType.CAST {
+        
+            tokenIndex += 1
+            
+            // We're casting, so the next token has to be the type that we're casting to
+            if currentType() == TokenType.INTEGERTYPE {
+                tokenIndex += 1
+                astObject.castingType = "Integer"
+            }
+            
+            if currentType() == TokenType.FLOATTYPE {
+                tokenIndex += 1
+                astObject.castingType = "Float"
+            }
+            
+            if currentType() == TokenType.BOOLEANTYPE {
+                tokenIndex += 1
+                astObject.castingType = "Boolean"
+            }
+            
+            if currentType() == TokenType.STRINGTYPE {
+                tokenIndex += 1
+                astObject.castingType = "String"
+            }
+            
+            if currentType() == TokenType.ARRAYTYPE {
+                tokenIndex += 1
+                astObject.castingType = "Array"
+            }
+            
+            if currentType() == TokenType.DICTIONARYTYPE {
+                tokenIndex += 1
+                astObject.castingType = "Dictionary"
+            }
+        }
+//
+        
         if currentType() == TokenType.IN {
             tokenIndex += 1
         } else {
@@ -894,8 +936,57 @@ class Parser {
             astObject.rightSide = lastCreatedQuickObject as? QuickValue
         }
         
-        lastCreatedQuickObject = astObject
-        return true
+        if currentType() != TokenType.CAST {
+            lastCreatedQuickObject = astObject
+            return true
+        }
+        
+        tokenIndex += 1
+        
+        // We're casting, so the next token has to be the type that we're casting to
+        if currentType() == TokenType.INTEGERTYPE {
+            tokenIndex += 1
+            astObject.castingType = "Integer"
+            lastCreatedQuickObject = astObject
+            return true
+        }
+
+        if currentType() == TokenType.FLOATTYPE {
+            tokenIndex += 1
+            astObject.castingType = "Float"
+            lastCreatedQuickObject = astObject
+            return true
+        }
+
+        if currentType() == TokenType.BOOLEANTYPE {
+            tokenIndex += 1
+            astObject.castingType = "Boolean"
+            lastCreatedQuickObject = astObject
+            return true
+        }
+        
+        if currentType() == TokenType.STRINGTYPE {
+            tokenIndex += 1
+             astObject.castingType = "String"
+            lastCreatedQuickObject = astObject
+            return true
+        }
+
+        if currentType() == TokenType.ARRAYTYPE {
+            tokenIndex += 1
+            astObject.castingType = "Array"
+            lastCreatedQuickObject = astObject
+            return true
+        }
+
+        if currentType() == TokenType.DICTIONARYTYPE {
+            tokenIndex += 1
+            astObject.castingType = "Dictionary"
+            lastCreatedQuickObject = astObject
+            return true
+        }
+
+        return false
         
     }
     

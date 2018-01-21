@@ -34,7 +34,6 @@ class QuickObject {
     func execute() {
         
     }
-    
         
 }
 
@@ -143,15 +142,15 @@ class QuickIdentifier : QuickObject {
     override func checkSymbols(symbolTable : QuickSymbolTable) {
         
         if subscriptValue != nil {
-            if getType() != "Array" && getType() != "Dictionary" {
+            if QuickSymbolTable.sharedRoot!.getType(ofIdentifier: content) != "Array" && QuickSymbolTable.sharedRoot!.getType(ofIdentifier: content) != "Dictionary" {
                 QuickError.shared.setErrorMessage("Subscripts are only allowed on arrays and dictionaries", withLine: -2)
             }
-            if getType() == "Array" {
+            if QuickSymbolTable.sharedRoot!.getType(ofIdentifier: content) == "Array" {
                 if subscriptValue?.getType() != "Integer" {
                     QuickError.shared.setErrorMessage("Array subscripts must be integers", withLine: -2)
                 }
             }
-            if getType() == "Dictionary" {
+            if QuickSymbolTable.sharedRoot!.getType(ofIdentifier: content) == "Dictionary" {
                 if subscriptValue?.getType() != "String" {
                     QuickError.shared.setErrorMessage("Dictionary subscripts must be strings", withLine: -2)
                 }
@@ -169,6 +168,10 @@ class QuickIdentifier : QuickObject {
             return "Symbol Table Error"
         }
         
+        if subscriptValue != nil {
+            return ""
+        }
+        
         return QuickSymbolTable.sharedRoot!.getType(ofIdentifier: content)
     }
     
@@ -181,7 +184,7 @@ class QuickIdentifier : QuickObject {
             if subscriptValue == nil {
                 QuickMemory.shared.stack.append(storedValue!)
             } else {
-                if getType() == "Array" {
+                if QuickSymbolTable.sharedRoot!.getType(ofIdentifier: content) == "Array" {
                     let parametersArray = storedValue as! Array<Any>
                     subscriptValue?.execute()
                     let subscriptInt = QuickMemory.shared.stack.popLast() as! Int
@@ -189,7 +192,7 @@ class QuickIdentifier : QuickObject {
                         QuickError.shared.setErrorMessage("Array index is out of bounds", withLine: -2)
                     }
                     QuickMemory.shared.stack.append(parametersArray[subscriptInt])
-                } else if getType() == "Dictionary" {
+                } else if QuickSymbolTable.sharedRoot!.getType(ofIdentifier: content) == "Dictionary" {
                     subscriptValue?.execute()
                     let subscriptString = QuickMemory.shared.stack.popLast() as! String
                     let dictionary = storedValue as! Dictionary<String, Any>
@@ -1419,6 +1422,7 @@ class QuickAssignment : QuickObject {
     
     var leftSide : QuickProperty?
     var rightSide : QuickObject?
+    var castingType : String?
     var parent : QuickStatement?
     
     override func printDebugDescription(withLevel: Int) {
@@ -1428,6 +1432,12 @@ class QuickAssignment : QuickObject {
         Output.shared.string.append("Quick Assignment\n")
         leftSide?.printDebugDescription(withLevel: withLevel + 1)
         rightSide?.printDebugDescription(withLevel: withLevel + 1)
+        if castingType != nil {
+            for _ in 0...(withLevel+1) {
+                Output.shared.string.append("-")
+            }
+            Output.shared.string.append("Quick Type: \(castingType!)\n")
+        }
     }
         
     override func checkSymbols(symbolTable : QuickSymbolTable) {
@@ -1449,13 +1459,44 @@ class QuickAssignment : QuickObject {
         let type = rightSide!.getType()
         symbolTable.checkType(type, ofIdentifier: leftSideString)
         
+        if castingType != nil {
+            symbolTable.checkType(castingType!, ofIdentifier: leftSideString)
+        }
+        
     }
 
     override func execute() {
         leftSide?.execute()
         let leftSideResult = QuickMemory.shared.stack.popLast()
         rightSide?.execute()
-        let rightSideResult = QuickMemory.shared.stack.popLast()
+        var rightSideResult = QuickMemory.shared.stack.popLast()
+        
+        if castingType == "Integer" {
+            if !(rightSideResult is Integer) {
+                rightSideResult = 0
+            }
+        } else if castingType == "Float" {
+            if !(rightSideResult is Float) {
+                rightSideResult = 0.0
+            }
+        } else if castingType == "Boolean" {
+            if !(rightSideResult is Bool) {
+                rightSideResult = false
+            }
+        } else if castingType == "String" {
+            if !(rightSideResult is String) {
+                rightSideResult = ""
+            }
+        } else if castingType == "Dictionary" {
+            if !(rightSideResult is Dictionary<String, Any>) {
+                rightSideResult = [:]
+            }
+        } else if castingType == "Array" {
+            if !(rightSideResult is Array<Any>) {
+                rightSideResult = []
+            }
+        }
+        
         if rightSideResult != nil && (leftSideResult as? String) != nil {
             // Check to see if left side result is an external symbol, set directly if it is
             if QuickSymbolTable.externalSymbols[leftSideResult as! String] != nil {
@@ -1501,7 +1542,10 @@ class QuickArray : QuickObject {
     }
     
     override func getType() -> String {
-        return "Array"
+        if subscriptValue == nil {
+            return "Array"
+        }
+        return ""
     }
     
     override func execute() {
@@ -1586,7 +1630,10 @@ class QuickDictionary : QuickObject {
     }
     
     override func getType() -> String {
-        return "Dictionary"
+        if subscriptValue == nil {
+            return "Dictionary"
+        }
+        return ""
     }
     
     override func execute() {
@@ -1652,6 +1699,7 @@ class QuickIfStatement : QuickObject {
 class QuickForLoop : QuickObject {
     
     var identifier : QuickIdentifier?
+    var castingType : String?
     var array : QuickValue?
     var executionBlock : QuickMultilineStatement?
     var parent : QuickObject?
@@ -1662,6 +1710,12 @@ class QuickForLoop : QuickObject {
         }
         Output.shared.string.append("Quick For Loop\n")
         identifier?.printDebugDescription(withLevel: withLevel + 1)
+        if castingType != nil {
+            for _ in 0...(withLevel+1) {
+                Output.shared.string.append("-")
+            }
+            Output.shared.string.append("Quick Type: \(castingType!)\n")
+        }
         array?.printDebugDescription(withLevel: withLevel + 1)
         executionBlock?.printDebugDescription(withLevel: withLevel + 1)
     }
@@ -1669,6 +1723,11 @@ class QuickForLoop : QuickObject {
     override func checkSymbols(symbolTable : QuickSymbolTable) {
         identifier?.addSymbols(symbolTable: symbolTable)
         identifier?.checkSymbols(symbolTable: symbolTable)
+        
+        if castingType != nil {
+            symbolTable.checkType(castingType!, ofIdentifier: identifier!.content)
+        }
+        
         array?.checkSymbols(symbolTable: symbolTable)
         executionBlock?.checkSymbols(symbolTable: symbolTable)
     }
@@ -1678,7 +1737,36 @@ class QuickForLoop : QuickObject {
         array?.execute()
         let collection = QuickMemory.shared.stack.popLast() as! Array<Any>
         for obj in collection {
-            QuickMemory.shared.heap[identifier!.content] = obj
+            
+            var cleanObject = obj
+            
+            if castingType == "Integer" {
+                if !(cleanObject is Int) {
+                    cleanObject = 0
+                }
+            } else if castingType == "Float" {
+                if !(cleanObject is Float) {
+                    cleanObject = 0.0
+                }
+            } else if castingType == "Boolean" {
+                if !(cleanObject is Bool) {
+                    cleanObject = false
+                }
+            } else if castingType == "String" {
+                if !(cleanObject is String) {
+                    cleanObject = ""
+                }
+            } else if castingType == "Dictionary" {
+                if !(cleanObject is Dictionary<String, Any>) {
+                    cleanObject = [:]
+                }
+            } else if castingType == "Array" {
+                if !(cleanObject is Array<Any>) {
+                    cleanObject = []
+                }
+            }
+
+            QuickMemory.shared.heap[identifier!.content] = cleanObject
             executionBlock?.execute()
         }
 

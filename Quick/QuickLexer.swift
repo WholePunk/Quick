@@ -54,6 +54,13 @@ enum TokenType {
     case LARGERTHANOREQUAL
     case STARTARRAY
     case ENDARRAY
+    case CAST
+    case INTEGERTYPE
+    case FLOATTYPE
+    case BOOLEANTYPE
+    case STRINGTYPE
+    case DICTIONARYTYPE
+    case ARRAYTYPE
     case EOF
     case ERROR
 }
@@ -261,7 +268,35 @@ class Tokenizer {
                     if currentTokenString == "or" {
                         currentToken = TokenType.OR
                     }
-                    
+
+                    if currentTokenString == "as" {
+                        currentToken = TokenType.CAST
+                    }
+
+                    if currentTokenString == "Dictionary" {
+                        currentToken = TokenType.DICTIONARYTYPE
+                    }
+
+                    if currentTokenString == "Array" {
+                        currentToken = TokenType.ARRAYTYPE
+                    }
+
+                    if currentTokenString == "String" {
+                        currentToken = TokenType.STRINGTYPE
+                    }
+
+                    if currentTokenString == "Boolean" {
+                        currentToken = TokenType.BOOLEANTYPE
+                    }
+
+                    if currentTokenString == "Float" {
+                        currentToken = TokenType.FLOATTYPE
+                    }
+
+                    if currentTokenString == "Integer" {
+                        currentToken = TokenType.INTEGERTYPE
+                    }
+
                     continue
                 }
                 
