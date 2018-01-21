@@ -39,6 +39,7 @@ enum TokenType {
     case OPENARGUMENTS
     case CLOSEARGUMENTS
     case ARGUMENTSEPERATOR
+    case KEYVALUESEPERATOR
     case NEWLINE
     case TRUE
     case FALSE
@@ -169,6 +170,9 @@ class Tokenizer {
                     } else if asCharacter == "," {
                         currentToken = TokenType.ARGUMENTSEPERATOR
                         commitToken()
+                    } else if asCharacter == ":" {
+                        currentToken = TokenType.KEYVALUESEPERATOR
+                        commitToken()
                     } else {
                         currentToken = TokenType.ERROR
                     }
@@ -196,10 +200,25 @@ class Tokenizer {
                         commitToken()
                         currentToken = TokenType.ARGUMENTSEPERATOR
                         commitToken()
+                    } else if asCharacter == ":" {
+                        popLastCharacter()
+                        commitToken()
+                        currentToken = TokenType.KEYVALUESEPERATOR
+                        commitToken()
+                    } else if asCharacter == "[" {
+                        popLastCharacter()
+                        commitToken()
+                        currentToken = TokenType.STARTARRAY
+                        commitToken()
                     } else if asCharacter == "]" {
                         popLastCharacter()
                         commitToken()
                         currentToken = TokenType.ENDARRAY
+                        commitToken()
+                    } else if asCharacter == "}" {
+                        popLastCharacter()
+                        commitToken()
+                        currentToken = TokenType.CLOSEBRACE
                         commitToken()
                     } else {
                         currentToken = TokenType.ERROR
@@ -295,6 +314,16 @@ class Tokenizer {
                             commitToken()
                             currentToken = TokenType.ENDARRAY
                             commitToken()
+                        } else if asCharacter == "}" {
+                            popLastCharacter()
+                            commitToken()
+                            currentToken = TokenType.CLOSEBRACE
+                            commitToken()
+                        } else if asCharacter == ":" {
+                            popLastCharacter()
+                            commitToken()
+                            currentToken = TokenType.KEYVALUESEPERATOR
+                            commitToken()
                         } else if asCharacter == "," {
                             popLastCharacter()
                             commitToken()
@@ -320,6 +349,11 @@ class Tokenizer {
                         commitToken()
                         currentToken = TokenType.CLOSEARGUMENTS
                         commitToken()
+                    } else if asCharacter == "}" {
+                        popLastCharacter()
+                        commitToken()
+                        currentToken = TokenType.CLOSEBRACE
+                        commitToken()
                     } else if asCharacter == "]" {
                         popLastCharacter()
                         commitToken()
@@ -344,6 +378,11 @@ class Tokenizer {
                         commitToken()
                         currentToken = TokenType.CLOSEARGUMENTS
                         commitToken()
+                    } else if asCharacter == "}" {
+                        popLastCharacter()
+                        commitToken()
+                        currentToken = TokenType.CLOSEBRACE
+                        commitToken()
                     } else if asCharacter == "]" {
                         popLastCharacter()
                         commitToken()
@@ -361,7 +400,19 @@ class Tokenizer {
                 }
                 
                 if currentToken == TokenType.OPENBRACE {
-                    currentToken = TokenType.ERROR // Open Braces can't have a second character
+                    if asCharacter == "\"" {
+                        popLastCharacter()
+                        commitToken()
+                        currentToken = TokenType.STRING
+                        currentTokenString = "\(asCharacter)"
+                        inString = true
+                    } else if (CharacterSet.alphanumerics as NSCharacterSet).characterIsMember(character) {
+                        commitToken()
+                        currentToken = TokenType.IDENTIFIER
+                        currentTokenString = "\(asCharacter)"
+                    } else {
+                        currentToken = TokenType.ERROR
+                    }
                     continue
                 }
                 
@@ -423,6 +474,11 @@ class Tokenizer {
                         commitToken()
                         currentToken = TokenType.CLOSEARGUMENTS
                         commitToken()
+                    } else if asCharacter == "}" {
+                        popLastCharacter()
+                        commitToken()
+                        currentToken = TokenType.CLOSEBRACE
+                        commitToken()
                     } else if asCharacter == "]" {
                         popLastCharacter()
                         commitToken()
@@ -432,6 +488,11 @@ class Tokenizer {
                         popLastCharacter()
                         commitToken()
                         currentToken = TokenType.ARGUMENTSEPERATOR
+                        commitToken()
+                    } else if asCharacter == ":" {
+                        popLastCharacter()
+                        commitToken()
+                        currentToken = TokenType.KEYVALUESEPERATOR
                         commitToken()
                     } else {
                         currentToken = TokenType.ERROR

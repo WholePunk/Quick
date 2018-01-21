@@ -190,13 +190,9 @@ class Parser {
             astObject.content = lastCreatedQuickObject as? QuickMathExpression
             lastCreatedQuickObject = astObject
             return true
-        } else if currentType() == TokenType.IDENTIFIER {
-            let identifierObject = QuickIdentifier()
-            identifierObject.parent = astObject
-            identifierObject.content = currentToken().tokenString
-            astObject.content = identifierObject
+        } else if parseIdentifier() {
+            astObject.content = lastCreatedQuickObject as? QuickIdentifier
             lastCreatedQuickObject = astObject
-            tokenIndex += 1
             return true
         } else if currentType() == TokenType.STRING {
             let stringObject = QuickString()
@@ -214,10 +210,51 @@ class Parser {
             astObject.content = lastCreatedQuickObject as? QuickArray
             lastCreatedQuickObject = astObject
             return true
+        } else if parseDictionary() {
+            astObject.content = lastCreatedQuickObject as? QuickDictionary
+            lastCreatedQuickObject = astObject
+            return true
         } else {
             tokenIndex = backtrackIndex
             return false
         }
+        
+    }
+    
+    func parseIdentifier() -> Bool {
+        
+        let backtrackIndex = tokenIndex
+        let astObject = QuickIdentifier()
+        
+        if currentType() == TokenType.IDENTIFIER {
+            astObject.content = currentToken().tokenString
+            tokenIndex += 1
+        } else {
+            tokenIndex = backtrackIndex
+            return false
+        }
+        
+        // Identifiers *can* be followed by an immediate subscript, but don't require it
+        if currentType() != TokenType.STARTARRAY {
+            lastCreatedQuickObject = astObject
+            return true // No subscript, let's keep going
+        }
+        tokenIndex += 1
+        
+        if !parseValue() {
+            tokenIndex = backtrackIndex
+            return false
+        }
+        astObject.subscriptValue = lastCreatedQuickObject as? QuickValue
+        
+        if currentType() != TokenType.ENDARRAY {
+            tokenIndex = backtrackIndex
+            return false
+        }
+        tokenIndex += 1
+        
+        lastCreatedQuickObject = astObject
+        return true
         
     }
     
@@ -327,12 +364,9 @@ class Parser {
                 return false
             }
             
-        } else if currentType() == TokenType.IDENTIFIER {
-            let quickIdentifier = QuickIdentifier()
-            quickIdentifier.content = currentToken().tokenString
-            quickIdentifier.parent = astObject
+        } else if parseIdentifier() {
+            let quickIdentifier = lastCreatedQuickObject as! QuickIdentifier
             astObject.content = quickIdentifier
-            tokenIndex += 1
             
             if !parseMathOperators() {
                 lastCreatedQuickObject = astObject
@@ -719,8 +753,8 @@ class Parser {
             return false
         }
         
-        if currentType() == TokenType.IDENTIFIER {
-            let identifierObject = QuickIdentifier()
+        if parseIdentifier() {
+            let identifierObject = lastCreatedQuickObject as! QuickIdentifier
             identifierObject.content = currentToken().tokenString
             identifierObject.parent = astObject
             astObject.identifier = identifierObject
@@ -872,18 +906,14 @@ class Parser {
         let backtrackIndex = tokenIndex
         let astObject = QuickProperty()
         
-        if currentType() != TokenType.IDENTIFIER {
+        if !parseIdentifier() {
             tokenIndex = backtrackIndex
             return false
         }
         
-        let identifierObject = QuickIdentifier()
-        identifierObject.content = currentToken().tokenString
-        identifierObject.parent = astObject
+        let identifierObject = lastCreatedQuickObject as! QuickIdentifier
         astObject.content.append(identifierObject)
-        
-        tokenIndex += 1
-        
+                
         lastCreatedQuickObject = astObject
         return true
         
@@ -1017,7 +1047,7 @@ class Parser {
             if currentType() == TokenType.STARTARRAY {
                 tokenIndex += 1
             } else {
-                lastCreatedQuickObject = astObject 
+                lastCreatedQuickObject = astObject
                 return true // No subscript, we're done here
             }
             
@@ -1033,7 +1063,7 @@ class Parser {
                 return false
             }
             tokenIndex += 1
-
+            
             lastCreatedQuickObject = astObject
             return true
             
@@ -1043,6 +1073,95 @@ class Parser {
         return false
         
     }
-    
+
+    func parseDictionary() -> Bool {
+        
+        let backtrackIndex = tokenIndex
+        let astObject = QuickDictionary()
+        
+        if currentType() == TokenType.OPENBRACE {
+            tokenIndex += 1
+        } else {
+            tokenIndex = backtrackIndex
+            return false
+        }
+        
+        if currentType() == TokenType.CLOSEBRACE {
+            tokenIndex += 1
+            lastCreatedQuickObject = astObject
+            return true
+        } else {
+            
+            while currentType() != TokenType.CLOSEBRACE {
+                
+                if !parseValue() {
+                    tokenIndex = backtrackIndex
+                    return false
+                }
+                
+                let keyValue = lastCreatedQuickObject as! QuickValue
+                
+                if currentType() != TokenType.KEYVALUESEPERATOR {
+                    tokenIndex = backtrackIndex
+                    return false
+                }
+                tokenIndex += 1
+
+                if !parseValue() {
+                    tokenIndex = backtrackIndex
+                    return false
+                }
+                
+                let valueValue = lastCreatedQuickObject as! QuickValue
+
+                let astKeyValuePair = QuickKeyValuePair()
+                astKeyValuePair.parent = astObject
+                astKeyValuePair.key = keyValue
+                astKeyValuePair.value = valueValue
+                astObject.content.append(astKeyValuePair)
+                
+                if currentType() == TokenType.ARGUMENTSEPERATOR {
+                    tokenIndex += 1
+                }
+
+            }
+            
+            if currentType() == TokenType.CLOSEBRACE {
+                tokenIndex += 1
+            } else {
+                tokenIndex = backtrackIndex
+                return false
+            }
+            
+            if currentType() == TokenType.STARTARRAY {
+                tokenIndex += 1
+            } else {
+                lastCreatedQuickObject = astObject
+                return true // No subscript, we're done here
+            }
+            
+            if !parseValue() {
+                tokenIndex = backtrackIndex
+                return false
+            }
+            astObject.subscriptValue = lastCreatedQuickObject as? QuickValue
+            
+            
+            if currentType() != TokenType.ENDARRAY {
+                tokenIndex = backtrackIndex
+                return false
+            }
+            tokenIndex += 1
+            
+            lastCreatedQuickObject = astObject
+            return true
+            
+        }
+        
+        tokenIndex = backtrackIndex
+        return false
+        
+    }
+
 }
 

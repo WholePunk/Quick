@@ -126,6 +126,7 @@ class QuickString : QuickObject {
 class QuickIdentifier : QuickObject {
     
     var content = ""
+    var subscriptValue : QuickValue?
     var parent : QuickObject?
     
     override func printDebugDescription(withLevel: Int) {
@@ -140,6 +141,25 @@ class QuickIdentifier : QuickObject {
     }
     
     override func checkSymbols(symbolTable : QuickSymbolTable) {
+        
+        if subscriptValue != nil {
+            if getType() != "Array" && getType() != "Dictionary" {
+                QuickError.shared.setErrorMessage("Subscripts are only allowed on arrays and dictionaries", withLine: -2)
+            }
+            if getType() == "Array" {
+                if subscriptValue?.getType() != "Integer" {
+                    QuickError.shared.setErrorMessage("Array subscripts must be integers", withLine: -2)
+                }
+            }
+            if getType() == "Dictionary" {
+                if subscriptValue?.getType() != "String" {
+                    QuickError.shared.setErrorMessage("Dictionary subscripts must be strings", withLine: -2)
+                }
+            }
+        }
+        
+        
+        
         symbolTable.expectSymbol(content)
     }
     
@@ -155,9 +175,32 @@ class QuickIdentifier : QuickObject {
     override func execute() {
         let storedValue = QuickMemory.shared.heap[content]
         if storedValue == nil {
-            QuickError.shared.setErrorMessage("Corrupted stack", withLine: -2)
+            QuickError.shared.setErrorMessage("Corrupted heap", withLine: -2)
         } else {
-            QuickMemory.shared.stack.append(storedValue!)
+            
+            if subscriptValue == nil {
+                QuickMemory.shared.stack.append(storedValue!)
+            } else {
+                if getType() == "Array" {
+                    let parametersArray = storedValue as! Array<Any>
+                    subscriptValue?.execute()
+                    let subscriptInt = QuickMemory.shared.stack.popLast() as! Int
+                    if subscriptInt >= parametersArray.count {
+                        QuickError.shared.setErrorMessage("Array index is out of bounds", withLine: -2)
+                    }
+                    QuickMemory.shared.stack.append(parametersArray[subscriptInt])
+                } else if getType() == "Dictionary" {
+                    subscriptValue?.execute()
+                    let subscriptString = QuickMemory.shared.stack.popLast() as! String
+                    let dictionary = storedValue as! Dictionary<String, Any>
+                    if dictionary[subscriptString] == nil {
+                        QuickMemory.shared.stack.append("NULL")
+                    } else {
+                        QuickMemory.shared.stack.append(dictionary[subscriptString]!)
+                    }
+                }
+            }
+            
         }
     }
     
@@ -1356,11 +1399,11 @@ class QuickArray : QuickObject {
             }
         }
     }
-
+    
     override func getType() -> String {
         return "Array"
     }
-
+    
     override func execute() {
         parameters?.execute()
         
@@ -1373,7 +1416,99 @@ class QuickArray : QuickObject {
             }
             QuickMemory.shared.stack.append(parametersArray[subscriptInt])
         }
+        
+        
+    }
+    
+}
 
+class QuickKeyValuePair : QuickObject {
+    
+    var key : QuickValue?
+    var value : QuickValue?
+    var parent : QuickObject?
+    
+    override func printDebugDescription(withLevel: Int) {
+        for _ in 0...withLevel {
+            Output.shared.string.append("-")
+        }
+        Output.shared.string.append("Quick Key Value Pair\n")
+        key?.printDebugDescription(withLevel: withLevel + 1)
+        value?.printDebugDescription(withLevel: withLevel + 1)
+    }
+    
+    override func checkSymbols(symbolTable : QuickSymbolTable) {
+        key?.checkSymbols(symbolTable: symbolTable)
+        value?.checkSymbols(symbolTable: symbolTable)
+    }
+    
+    override func execute() {
+        var computed : Dictionary<String, Any> = [:]
+        key?.execute()
+        let keyValue = QuickMemory.shared.stack.popLast()!
+        value?.execute()
+        let valueValue = QuickMemory.shared.stack.popLast()!
+        computed["\(keyValue)"] = valueValue
+        QuickMemory.shared.stack.append(computed)
+    }
+    
+}
+
+class QuickDictionary : QuickObject {
+    
+    var content : Array<QuickKeyValuePair> = []
+    var subscriptValue : QuickValue?
+    var parent : QuickObject?
+    
+    override func printDebugDescription(withLevel: Int) {
+        for _ in 0...withLevel {
+            Output.shared.string.append("-")
+        }
+        Output.shared.string.append("Quick Dictionary\n")
+        for pair in content {
+            pair.printDebugDescription(withLevel: withLevel + 1)
+        }
+        subscriptValue?.printDebugDescription(withLevel: withLevel + 1)
+    }
+    
+    override func checkSymbols(symbolTable : QuickSymbolTable) {
+        
+        for pair in content {
+            pair.checkSymbols(symbolTable: symbolTable)
+        }
+
+        if subscriptValue != nil {
+            let subscriptType = subscriptValue!.getType()
+            if subscriptType != "String" {
+                QuickError.shared.setErrorMessage("Type \(subscriptType) is not an String", withLine: -2)
+            }
+        }
+    }
+    
+    override func getType() -> String {
+        return "Dictionary"
+    }
+    
+    override func execute() {
+        
+        var computed : Dictionary<String, Any> = [:]
+        for pair in content {
+            pair.execute()
+            let pairResult = QuickMemory.shared.stack.popLast() as! Dictionary<String, Any>
+            computed.add(dictionary: pairResult)
+        }
+        QuickMemory.shared.stack.append(computed)
+        
+        if subscriptValue != nil {
+            subscriptValue?.execute()
+            let subscriptString = QuickMemory.shared.stack.popLast() as! String
+            if computed[subscriptString] == nil {
+                QuickMemory.shared.stack.append("NULL")
+            } else {
+                QuickMemory.shared.stack.append(computed[subscriptString]!)
+            }
+        }
+        
         
     }
     
