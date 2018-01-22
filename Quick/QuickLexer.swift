@@ -61,6 +61,7 @@ enum TokenType {
     case STRINGTYPE
     case DICTIONARYTYPE
     case ARRAYTYPE
+    case IMAGETYPE
     case EOF
     case ERROR
 }
@@ -279,6 +280,10 @@ class Tokenizer {
 
                     if currentTokenString == "Array" {
                         currentToken = TokenType.ARRAYTYPE
+                    }
+
+                    if currentTokenString == "Image" {
+                        currentToken = TokenType.IMAGETYPE
                     }
 
                     if currentTokenString == "String" {

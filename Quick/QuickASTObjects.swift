@@ -1234,6 +1234,9 @@ class QuickMethodCall : QuickObject {
         if methodName == "getJSONDictionary" {
             executeGetJSONDictionaryWithParameters(parameters!)
         }
+        if methodName == "getImage" {
+            executeGetImageWithParameters(parameters!)
+        }
     }
     
     func executePrintWithParameters(_ parameters : QuickParameters) {
@@ -1335,8 +1338,51 @@ class QuickMethodCall : QuickObject {
         } catch {
             print("Error deserializing JSON")
         }
-
+        
         QuickMemory.shared.stack.append([:])
+        
+    }
+
+    func executeGetImageWithParameters(_ parameters : QuickParameters) {
+        
+        if parameters.parameters.count > 1 || parameters.parameters.count == 0 {
+            QuickMemory.shared.stack.append([:])
+            return
+        }
+        
+        // We only have a single parameter
+        let parameter = parameters.parameters[0]
+        parameter.execute()
+        let parameterValue = QuickMemory.shared.stack.popLast()
+        
+        guard parameterValue as? String != nil else {
+            QuickMemory.shared.stack.append([:])
+            return
+        }
+        
+        let url = URL(string: parameterValue as! String)
+        guard url != nil else {
+            QuickMemory.shared.stack.append([:])
+            return
+        }
+        
+        var data : Data?
+        var response : URLResponse?
+        var error : Error?
+        (data, response, error) = URLSession.shared.synchronousDataTask(with: url!)
+        
+        if error != nil {
+            QuickMemory.shared.stack.append([:])
+            return
+        }
+        
+        if let data = data,
+            let image = UIImage(data: data) {
+            QuickMemory.shared.stack.append(image)
+            return
+        }
+        
+        QuickMemory.shared.stack.append(UIImage(named: "blank"))
         
     }
 
@@ -1495,15 +1541,28 @@ class QuickAssignment : QuickObject {
             if !(rightSideResult is Array<Any>) {
                 rightSideResult = []
             }
+        } else if castingType == "Image" {
+            if !(rightSideResult is UIImage) {
+                rightSideResult = UIImage(named: "blank")
+            }
         }
-        
+
         if rightSideResult != nil && (leftSideResult as? String) != nil {
             // Check to see if left side result is an external symbol, set directly if it is
             if QuickSymbolTable.externalSymbols[leftSideResult as! String] != nil {
                 let propertyId = (leftSideResult as! NSString).components(separatedBy: ".").last! // Update with the actual property derived from left side result
                 DispatchQueue.main.async {
-                    (QuickSymbolTable.externalSymbols[leftSideResult as! String] as? ViewRenderer)?.updateViewProperty(forIdentifier: propertyId, withNewValue: rightSideResult, withDuration: 0.3)
-                    (QuickSymbolTable.externalSymbols[leftSideResult as! String] as? ViewRenderer)?.render()
+                    
+                    if rightSideResult is UIImage {
+                        let imageUUID = UUID().uuidString
+                        ImageManager.sharedInstance.addTempImage(rightSideResult as! UIImage, withName: imageUUID)
+                        (QuickSymbolTable.externalSymbols[leftSideResult as! String] as? ViewRenderer)?.updateViewProperty(forIdentifier: propertyId, withNewValue: imageUUID, withDuration: 0.3)
+                        (QuickSymbolTable.externalSymbols[leftSideResult as! String] as? ViewRenderer)?.render()
+                    } else {
+                        (QuickSymbolTable.externalSymbols[leftSideResult as! String] as? ViewRenderer)?.updateViewProperty(forIdentifier: propertyId, withNewValue: rightSideResult, withDuration: 0.3)
+                        (QuickSymbolTable.externalSymbols[leftSideResult as! String] as? ViewRenderer)?.render()
+                    }
+                    
                 }
             }
             // Not an external symbol, assign it in the heap
@@ -1763,6 +1822,10 @@ class QuickForLoop : QuickObject {
             } else if castingType == "Array" {
                 if !(cleanObject is Array<Any>) {
                     cleanObject = []
+                }
+            } else if castingType == "Image" {
+                if !(cleanObject is UIImage) {
+                    cleanObject = UIImage(named: "blank")
                 }
             }
 

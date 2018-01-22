@@ -37,6 +37,7 @@ class Parser {
         symbolTable.addSymbol("print", ofType: "String")
         symbolTable.addSymbol("getJSONArray", ofType: "Array")
         symbolTable.addSymbol("getJSONDictionary", ofType: "Dictionary")
+        symbolTable.addSymbol("getImage", ofType: "Image")
 
         QuickSymbolTable.sharedRoot = symbolTable
         Output.shared.string = ""
@@ -796,7 +797,12 @@ class Parser {
                 tokenIndex += 1
                 astObject.castingType = "Array"
             }
-            
+
+            if currentType() == TokenType.IMAGETYPE {
+                tokenIndex += 1
+                astObject.castingType = "Image"
+            }
+
             if currentType() == TokenType.DICTIONARYTYPE {
                 tokenIndex += 1
                 astObject.castingType = "Dictionary"
@@ -975,6 +981,13 @@ class Parser {
         if currentType() == TokenType.ARRAYTYPE {
             tokenIndex += 1
             astObject.castingType = "Array"
+            lastCreatedQuickObject = astObject
+            return true
+        }
+
+        if currentType() == TokenType.IMAGETYPE {
+            tokenIndex += 1
+            astObject.castingType = "Image"
             lastCreatedQuickObject = astObject
             return true
         }
