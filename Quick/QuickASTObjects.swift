@@ -1237,6 +1237,9 @@ class QuickMethodCall : QuickObject {
         if methodName == "getImage" {
             executeGetImageWithParameters(parameters!)
         }
+        if methodName == "encodeBase64" {
+            executeEncodeBase64(parameters!)
+        }
     }
     
     func executePrintWithParameters(_ parameters : QuickParameters) {
@@ -1383,6 +1386,30 @@ class QuickMethodCall : QuickObject {
         }
         
         QuickMemory.shared.stack.append(UIImage(named: "blank"))
+        
+    }
+
+    func executeEncodeBase64(_ parameters : QuickParameters) {
+        
+        if parameters.parameters.count > 1 || parameters.parameters.count == 0 {
+            QuickMemory.shared.stack.append([:])
+            return
+        }
+        
+        // We only have a single parameter
+        let parameter = parameters.parameters[0]
+        parameter.execute()
+        let parameterValue = QuickMemory.shared.stack.popLast()
+        
+        guard parameterValue as? String != nil else {
+            QuickMemory.shared.stack.append("")
+            return
+        }
+        
+        
+        let base64String = (parameterValue as! String).data(using: String.Encoding.utf8)!.base64EncodedString(options: Data.Base64EncodingOptions(rawValue: 0))
+        
+        QuickMemory.shared.stack.append(base64String)
         
     }
 
