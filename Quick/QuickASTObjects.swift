@@ -1240,6 +1240,16 @@ class QuickMethodCall : QuickObject {
         if methodName == "encodeBase64" {
             executeEncodeBase64(parameters!)
         }
+        if methodName == "countArray" {
+            executeCountArray(parameters!)
+        }
+        if methodName == "countDictionary" {
+            executeCountDictionary(parameters!)
+        }
+        if methodName == "getDictionaryKeys" {
+            executeGetDictionaryKeys(parameters!)
+        }
+        
     }
     
     func executePrintWithParameters(_ parameters : QuickParameters) {
@@ -1392,7 +1402,7 @@ class QuickMethodCall : QuickObject {
     func executeEncodeBase64(_ parameters : QuickParameters) {
         
         if parameters.parameters.count > 1 || parameters.parameters.count == 0 {
-            QuickMemory.shared.stack.append([:])
+            QuickMemory.shared.stack.append("")
             return
         }
         
@@ -1410,6 +1420,78 @@ class QuickMethodCall : QuickObject {
         let base64String = (parameterValue as! String).data(using: String.Encoding.utf8)!.base64EncodedString(options: Data.Base64EncodingOptions(rawValue: 0))
         
         QuickMemory.shared.stack.append(base64String)
+        
+    }
+
+    func executeCountArray(_ parameters : QuickParameters) {
+        
+        if parameters.parameters.count > 1 || parameters.parameters.count == 0 {
+            QuickMemory.shared.stack.append(0)
+            return
+        }
+        
+        // We only have a single parameter
+        let parameter = parameters.parameters[0]
+        parameter.execute()
+        let parameterValue = QuickMemory.shared.stack.popLast()
+        
+        guard parameterValue as? Array<Any> != nil else {
+            QuickMemory.shared.stack.append(0)
+            return
+        }
+        
+        let count = (parameterValue as! Array<Any>).count
+        
+        QuickMemory.shared.stack.append(count)
+        
+    }
+
+    func executeCountDictionary(_ parameters : QuickParameters) {
+        
+        if parameters.parameters.count > 1 || parameters.parameters.count == 0 {
+            QuickMemory.shared.stack.append(0)
+            return
+        }
+        
+        // We only have a single parameter
+        let parameter = parameters.parameters[0]
+        parameter.execute()
+        let parameterValue = QuickMemory.shared.stack.popLast()
+        
+        guard parameterValue as? Dictionary<String, Any> != nil else {
+            QuickMemory.shared.stack.append(0)
+            return
+        }
+        
+        let count = (parameterValue as! Dictionary<String, Any>).count
+        
+        QuickMemory.shared.stack.append(count)
+        
+    }
+
+    func executeGetDictionaryKeys(_ parameters : QuickParameters) {
+        
+        if parameters.parameters.count > 1 || parameters.parameters.count == 0 {
+            QuickMemory.shared.stack.append([])
+            return
+        }
+        
+        // We only have a single parameter
+        let parameter = parameters.parameters[0]
+        parameter.execute()
+        let parameterValue = QuickMemory.shared.stack.popLast()
+        
+        guard parameterValue as? Dictionary<String, Any> != nil else {
+            QuickMemory.shared.stack.append([])
+            return
+        }
+        
+        var allKeys : Array<Any> = []
+        for key in (parameterValue as! Dictionary<String, Any>).keys {
+            allKeys.append(key)
+        }
+        
+        QuickMemory.shared.stack.append(allKeys)
         
     }
 

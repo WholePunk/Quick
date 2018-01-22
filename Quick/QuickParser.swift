@@ -39,6 +39,9 @@ class Parser {
         symbolTable.addSymbol("getJSONDictionary", ofType: "Dictionary")
         symbolTable.addSymbol("getImage", ofType: "Image")
         symbolTable.addSymbol("encodeBase64", ofType: "String")
+        symbolTable.addSymbol("countArray", ofType: "Integer")
+        symbolTable.addSymbol("countDictionary", ofType: "Integer")
+        symbolTable.addSymbol("getDictionaryKeys", ofType: "Array")
 
         QuickSymbolTable.sharedRoot = symbolTable
         Output.shared.string = ""
