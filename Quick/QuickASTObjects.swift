@@ -1249,7 +1249,13 @@ class QuickMethodCall : QuickObject {
         if methodName == "getDictionaryKeys" {
             executeGetDictionaryKeys(parameters!)
         }
-        
+        if methodName == "addItemToDictionary" {
+            executeAddItemToDictionary(parameters!)
+        }
+        if methodName == "removeItemFromDictionary" {
+            executeRemoveItemFromDictionary(parameters!)
+        }
+
     }
     
     func executePrintWithParameters(_ parameters : QuickParameters) {
@@ -1492,6 +1498,82 @@ class QuickMethodCall : QuickObject {
         }
         
         QuickMemory.shared.stack.append(allKeys)
+        
+    }
+    
+    func executeAddItemToDictionary(_ parameters : QuickParameters) {
+        
+        if parameters.parameters.count != 3 {
+            QuickMemory.shared.stack.append([:])
+            return
+        }
+        
+        // We have three parameters.  Verify that the first is a dictionary and the second is a string
+        var parameter = parameters.parameters[0]
+        parameter.execute()
+        let dictionaryParameterValue = QuickMemory.shared.stack.popLast()
+        
+        guard dictionaryParameterValue as? Dictionary<String, Any> != nil else {
+            QuickMemory.shared.stack.append([:])
+            return
+        }
+        
+        parameter = parameters.parameters[1]
+        parameter.execute()
+        let keyParameterValue = QuickMemory.shared.stack.popLast()
+        
+        guard keyParameterValue as? String != nil else {
+            QuickMemory.shared.stack.append([:])
+            return
+        }
+        
+        parameter = parameters.parameters[2]
+        parameter.execute()
+        let valueParameterValue = QuickMemory.shared.stack.popLast()
+        
+        var newDictionary : Dictionary<String, Any> = [:]
+        for key in (dictionaryParameterValue as! Dictionary<String, Any>).keys {
+            newDictionary[key] = (dictionaryParameterValue as! Dictionary<String, Any>)[key]
+        }
+        newDictionary[keyParameterValue as! String] = valueParameterValue
+        
+        QuickMemory.shared.stack.append(newDictionary)
+        
+    }
+
+    func executeRemoveItemFromDictionary(_ parameters : QuickParameters) {
+        
+        if parameters.parameters.count != 2 {
+            QuickMemory.shared.stack.append([:])
+            return
+        }
+        
+        // We have three parameters.  Verify that the first is a dictionary and the second is a string
+        var parameter = parameters.parameters[0]
+        parameter.execute()
+        let dictionaryParameterValue = QuickMemory.shared.stack.popLast()
+        
+        guard dictionaryParameterValue as? Dictionary<String, Any> != nil else {
+            QuickMemory.shared.stack.append([:])
+            return
+        }
+        
+        parameter = parameters.parameters[1]
+        parameter.execute()
+        let keyParameterValue = QuickMemory.shared.stack.popLast()
+        
+        guard keyParameterValue as? String != nil else {
+            QuickMemory.shared.stack.append([:])
+            return
+        }
+        
+        var newDictionary : Dictionary<String, Any> = [:]
+        for key in (dictionaryParameterValue as! Dictionary<String, Any>).keys {
+            newDictionary[key] = (dictionaryParameterValue as! Dictionary<String, Any>)[key]
+        }
+        newDictionary[keyParameterValue as! String] = nil
+        
+        QuickMemory.shared.stack.append(newDictionary)
         
     }
 

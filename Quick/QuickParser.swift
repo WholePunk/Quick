@@ -42,7 +42,9 @@ class Parser {
         symbolTable.addSymbol("countArray", ofType: "Integer")
         symbolTable.addSymbol("countDictionary", ofType: "Integer")
         symbolTable.addSymbol("getDictionaryKeys", ofType: "Array")
-
+        symbolTable.addSymbol("addItemToDictionary", ofType: "Dictionary")
+        symbolTable.addSymbol("removeItemFromDictionary", ofType: "Dictionary")
+        
         QuickSymbolTable.sharedRoot = symbolTable
         Output.shared.string = ""
         self.tokens = Tokenizer().tokens(fromSource: fromSource)
