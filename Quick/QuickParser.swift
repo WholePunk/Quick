@@ -44,6 +44,7 @@ class Parser {
         symbolTable.addSymbol("getDictionaryKeys", ofType: "Array")
         symbolTable.addSymbol("addItemToDictionary", ofType: "Dictionary")
         symbolTable.addSymbol("removeItemFromDictionary", ofType: "Dictionary")
+        symbolTable.addSymbol("addItemToArray", ofType: "Array")
         
         QuickSymbolTable.sharedRoot = symbolTable
         Output.shared.string = ""
@@ -185,6 +186,18 @@ class Parser {
             } else {
                 tokenIndex = backtrackIndex
                 QuickError.shared.setErrorMessage("Parse error - invalid method call", withLine: currentLine)
+                return false
+            }
+        } else if parseReturnStatement() {
+            if currentType() == TokenType.NEWLINE {
+                astObject.content = lastCreatedQuickObject as? QuickReturnStatement
+                lastCreatedQuickObject = astObject
+                currentLine += 1
+                tokenIndex += 1
+                return true
+            } else {
+                tokenIndex = backtrackIndex
+                QuickError.shared.setErrorMessage("Parse error - invalid return statement", withLine: currentLine)
                 return false
             }
         } else {
@@ -1268,6 +1281,28 @@ class Parser {
         
         tokenIndex = backtrackIndex
         return false
+        
+    }
+
+    func parseReturnStatement() -> Bool {
+        
+        let backtrackIndex = tokenIndex
+        let astObject = QuickReturnStatement()
+        
+        if currentType() == TokenType.RETURN {
+            tokenIndex += 1
+        } else {
+            tokenIndex = backtrackIndex
+            return false
+        }
+
+        if !parseValue() {
+            tokenIndex = backtrackIndex
+            return false
+        }
+        astObject.content = lastCreatedQuickObject as! QuickValue
+        lastCreatedQuickObject = astObject
+        return true
         
     }
 

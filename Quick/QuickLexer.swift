@@ -62,6 +62,7 @@ enum TokenType {
     case DICTIONARYTYPE
     case ARRAYTYPE
     case IMAGETYPE
+    case RETURN
     case EOF
     case ERROR
 }
@@ -300,6 +301,10 @@ class Tokenizer {
 
                     if currentTokenString == "Integer" {
                         currentToken = TokenType.INTEGERTYPE
+                    }
+
+                    if currentTokenString == "return" {
+                        currentToken = TokenType.RETURN
                     }
 
                     continue

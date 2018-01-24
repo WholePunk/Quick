@@ -31,8 +31,8 @@ class QuickObject {
         return ""
     }
     
-    func execute() {
-        
+    func execute() -> Any? {
+        return nil
     }
         
 }
@@ -54,8 +54,8 @@ class QuickStatement : QuickObject {
         content?.checkSymbols(symbolTable: symbolTable)
     }
     
-    override func execute() {
-        content?.execute()
+    override func execute() -> Any? {
+        return content?.execute()
     }
     
 }
@@ -87,15 +87,20 @@ class QuickMultilineStatement : QuickObject {
         symbolTable.popScope()
     }
     
-    override func execute() {
+    override func execute() -> Any? {
         QuickSymbolTable.sharedRoot?.pushScope()
         for statement in content {
             statement.checkSymbols(symbolTable: QuickSymbolTable.sharedRoot!)
         }
         for statement in content {
-            statement.execute()
+            let returnValue = statement.execute()
+            if returnValue != nil {
+                QuickSymbolTable.sharedRoot?.popScope()
+                return returnValue
+            }
         }
         QuickSymbolTable.sharedRoot?.popScope()
+        return nil
     }
     
 }
@@ -116,8 +121,9 @@ class QuickString : QuickObject {
         return "String"
     }
     
-    override func execute() {
+    override func execute() -> Any? {
         QuickMemory.shared.stack.append(content)
+        return nil
     }
 
 }
@@ -175,7 +181,7 @@ class QuickIdentifier : QuickObject {
         return QuickSymbolTable.sharedRoot!.getType(ofIdentifier: content)
     }
     
-    override func execute() {
+    override func execute() -> Any? {
         let storedValue = QuickMemory.shared.heap[content]
         if storedValue == nil {
             QuickError.shared.setErrorMessage("Corrupted heap", withLine: -2)
@@ -205,6 +211,7 @@ class QuickIdentifier : QuickObject {
             }
             
         }
+        return nil
     }
     
 }
@@ -225,8 +232,9 @@ class QuickInteger : QuickObject {
         return "Integer"
     }
     
-    override func execute() {
+    override func execute() -> Any? {
         QuickMemory.shared.stack.append(content)
+        return nil
     }
     
 }
@@ -247,8 +255,9 @@ class QuickFloat : QuickObject {
         return "Float"
     }
 
-    override func execute() {
+    override func execute() -> Any? {
         QuickMemory.shared.stack.append(content)
+        return nil
     }
 
 }
@@ -269,9 +278,11 @@ class QuickTrue : QuickObject {
         return "Boolean"
     }
     
-    override func execute() {
+    override func execute() -> Any? {
         QuickMemory.shared.stack.append(content)
+        return nil
     }
+    
 
 }
 
@@ -291,8 +302,9 @@ class QuickFalse : QuickObject {
         return "Boolean"
     }
     
-    override func execute() {
+    override func execute() -> Any? {
         QuickMemory.shared.stack.append(content)
+        return nil
     }
 
 }
@@ -321,8 +333,9 @@ class QuickMathExpression : QuickObject {
         return ""
     }
     
-    override func execute() {
+    override func execute() -> Any? {
         content?.execute()
+        return nil
     }
     
 }
@@ -353,8 +366,9 @@ class QuickMathOperator : QuickObject {
         return content!.getType()
     }
     
-    override func execute() {
+    override func execute() -> Any? {
         content?.execute()
+        return nil
     }
     
 }
@@ -398,7 +412,7 @@ class QuickPlus : QuickObject {
         return leftSide!.getType()
     }
     
-    override func execute() {
+    override func execute() -> Any? {
         leftSide?.execute()
         var leftSideValue = QuickMemory.shared.stack.popLast()
         rightSide?.execute()
@@ -418,6 +432,7 @@ class QuickPlus : QuickObject {
         } else {
             QuickMemory.shared.stack.append(0)
         }
+        return nil
     }
 
 }
@@ -461,7 +476,7 @@ class QuickMinus : QuickObject {
         return leftSide!.getType()
     }
     
-    override func execute() {
+    override func execute() -> Any? {
         leftSide?.execute()
         let leftSideValue = QuickMemory.shared.stack.popLast()
         rightSide?.execute()
@@ -475,6 +490,7 @@ class QuickMinus : QuickObject {
         } else {
             QuickMemory.shared.stack.append(0)
         }
+        return nil
     }
 
 }
@@ -518,7 +534,7 @@ class QuickMultiply : QuickObject {
         return leftSide!.getType()
     }
 
-    override func execute() {
+    override func execute() -> Any? {
         leftSide?.execute()
         let leftSideValue = QuickMemory.shared.stack.popLast()
         rightSide?.execute()
@@ -532,6 +548,7 @@ class QuickMultiply : QuickObject {
         } else {
             QuickMemory.shared.stack.append(0)
         }
+        return nil
     }
 
 }
@@ -575,7 +592,7 @@ class QuickDivide : QuickObject {
         return leftSide!.getType()
     }
 
-    override func execute() {
+    override func execute() -> Any? {
         leftSide?.execute()
         let leftSideValue = QuickMemory.shared.stack.popLast()
         rightSide?.execute()
@@ -589,6 +606,7 @@ class QuickDivide : QuickObject {
         } else {
             QuickMemory.shared.stack.append(0)
         }
+        return nil
     }
 
 }
@@ -632,7 +650,7 @@ class QuickMod : QuickObject {
         return leftSide!.getType()
     }
 
-    override func execute() {
+    override func execute() -> Any? {
         leftSide?.execute()
         let leftSideValue = QuickMemory.shared.stack.popLast()
         rightSide?.execute()
@@ -646,6 +664,7 @@ class QuickMod : QuickObject {
         } else {
             QuickMemory.shared.stack.append(0)
         }
+        return nil
     }
 
 }
@@ -690,7 +709,7 @@ class QuickEqual : QuickObject {
         return leftSide!.getType()
     }
 
-    override func execute() {
+    override func execute() -> Any? {
         leftSide?.execute()
         let leftSideValue = QuickMemory.shared.stack.popLast()
         rightSide?.execute()
@@ -710,6 +729,7 @@ class QuickEqual : QuickObject {
         } else {
             QuickMemory.shared.stack.append(false)
         }
+        return nil
     }
 
 }
@@ -753,7 +773,7 @@ class QuickNotEqual : QuickObject {
         return leftSide!.getType()
     }
 
-    override func execute() {
+    override func execute() -> Any? {
         leftSide?.execute()
         let leftSideValue = QuickMemory.shared.stack.popLast()
         rightSide?.execute()
@@ -771,6 +791,7 @@ class QuickNotEqual : QuickObject {
             let result = (leftSideValue as! Bool) != (rightSideValue as! Bool)
             QuickMemory.shared.stack.append(result)
         }
+        return nil
     }
 
 }
@@ -814,7 +835,7 @@ class QuickLessThan : QuickObject {
         return leftSide!.getType()
     }
 
-    override func execute() {
+    override func execute() -> Any? {
         leftSide?.execute()
         let leftSideValue = QuickMemory.shared.stack.popLast()
         rightSide?.execute()
@@ -826,6 +847,7 @@ class QuickLessThan : QuickObject {
             let result = (leftSideValue as! Float) < (rightSideValue as! Float)
             QuickMemory.shared.stack.append(result)
         }
+        return nil
     }
 
 }
@@ -869,7 +891,7 @@ class QuickGreaterThan : QuickObject {
         return leftSide!.getType()
     }
 
-    override func execute() {
+    override func execute() -> Any? {
         leftSide?.execute()
         let leftSideValue = QuickMemory.shared.stack.popLast()
         rightSide?.execute()
@@ -881,6 +903,7 @@ class QuickGreaterThan : QuickObject {
             let result = (leftSideValue as! Float) > (rightSideValue as! Float)
             QuickMemory.shared.stack.append(result)
         }
+        return nil
     }
 
 }
@@ -924,7 +947,7 @@ class QuickLessThanOrEqualTo : QuickObject {
         return leftSide!.getType()
     }
 
-    override func execute() {
+    override func execute() -> Any? {
         leftSide?.execute()
         let leftSideValue = QuickMemory.shared.stack.popLast()
         rightSide?.execute()
@@ -936,6 +959,7 @@ class QuickLessThanOrEqualTo : QuickObject {
             let result = (leftSideValue as! Float) <= (rightSideValue as! Float)
             QuickMemory.shared.stack.append(result)
         }
+        return nil
     }
 
 }
@@ -979,7 +1003,7 @@ class QuickGreaterThanOrEqualTo : QuickObject {
         return leftSide!.getType()
     }
 
-    override func execute() {
+    override func execute() -> Any? {
         leftSide?.execute()
         let leftSideValue = QuickMemory.shared.stack.popLast()
         rightSide?.execute()
@@ -991,6 +1015,7 @@ class QuickGreaterThanOrEqualTo : QuickObject {
             let result = (leftSideValue as! Float) >= (rightSideValue as! Float)
             QuickMemory.shared.stack.append(result)
         }
+        return nil
     }
 
 }
@@ -1038,13 +1063,14 @@ class QuickAnd : QuickObject {
         return leftSide!.getType()
     }
 
-    override func execute() {
+    override func execute() -> Any? {
         leftSide?.execute()
         let leftSideValue = QuickMemory.shared.stack.popLast()
         rightSide?.execute()
         let rightSideValue = QuickMemory.shared.stack.popLast()
         let result = (leftSideValue as! Bool) && (rightSideValue as! Bool)
         QuickMemory.shared.stack.append(result)
+        return nil
     }
 
 }
@@ -1091,13 +1117,14 @@ class QuickOr : QuickObject {
         return leftSide!.getType()
     }
 
-    override func execute() {
+    override func execute() -> Any? {
         leftSide?.execute()
         let leftSideValue = QuickMemory.shared.stack.popLast()
         rightSide?.execute()
         let rightSideValue = QuickMemory.shared.stack.popLast()
         let result = (leftSideValue as! Bool) || (rightSideValue as! Bool)
         QuickMemory.shared.stack.append(result)
+        return nil
     }
 
 }
@@ -1137,11 +1164,12 @@ class QuickNot : QuickObject {
         return rightSide!.getType()
     }
 
-    override func execute() {
+    override func execute() -> Any? {
         rightSide?.execute()
         let rightSideValue = QuickMemory.shared.stack.popLast()
         let result = !(rightSideValue as! Bool)
         QuickMemory.shared.stack.append(result)
+        return nil
     }
 
 }
@@ -1167,8 +1195,9 @@ class QuickLogicalExpression : QuickObject {
         return "Boolean"
     }
     
-    override func execute() {
+    override func execute() -> Any? {
         content?.execute()
+        return nil
     }
 
 }
@@ -1194,13 +1223,14 @@ class QuickParameters : QuickObject {
         }
     }
 
-    override func execute() {
+    override func execute() -> Any? {
         var computed : Array<Any> = []
         for parameter in parameters {
             parameter.execute()
             computed.append(QuickMemory.shared.stack.popLast()!)
         }
         QuickMemory.shared.stack.append(computed)
+        return nil
     }
 
 }
@@ -1224,7 +1254,7 @@ class QuickMethodCall : QuickObject {
         parameters?.checkSymbols(symbolTable: symbolTable)
     }
 
-    override func execute() {
+    override func execute() -> Any? {
         if methodName == "print" {
             executePrintWithParameters(parameters!)
         }
@@ -1255,6 +1285,11 @@ class QuickMethodCall : QuickObject {
         if methodName == "removeItemFromDictionary" {
             executeRemoveItemFromDictionary(parameters!)
         }
+        if methodName == "addItemToArray" {
+            executeAddItemToArray(parameters!)
+        }
+        
+        return nil
 
     }
     
@@ -1576,6 +1611,38 @@ class QuickMethodCall : QuickObject {
         QuickMemory.shared.stack.append(newDictionary)
         
     }
+    
+    func executeAddItemToArray(_ parameters : QuickParameters) {
+        
+        if parameters.parameters.count != 2 {
+            QuickMemory.shared.stack.append([])
+            return
+        }
+        
+        // We have three parameters.  Verify that the first is a dictionary and the second is a string
+        var parameter = parameters.parameters[0]
+        parameter.execute()
+        let arrayParameterValue = QuickMemory.shared.stack.popLast()
+        
+        guard arrayParameterValue as? Array<Any> != nil else {
+            QuickMemory.shared.stack.append([])
+            return
+        }
+        
+        parameter = parameters.parameters[1]
+        parameter.execute()
+        let valueParameterValue = QuickMemory.shared.stack.popLast()
+        
+        var newArray : Array<Any> = []
+        for item in arrayParameterValue as! Array<Any> {
+            newArray.append(item)
+        }
+        newArray.append(valueParameterValue!)
+        
+        QuickMemory.shared.stack.append(newArray)
+        
+    }
+
 
 }
 
@@ -1606,8 +1673,8 @@ class QuickProperty : QuickObject {
         }
     }
 
-    override func execute() {
-        
+    override func execute() -> Any? {
+
         var propertyString = ""
         for obj in content {
             if propertyString != "" {
@@ -1617,6 +1684,7 @@ class QuickProperty : QuickObject {
         }
         QuickMemory.shared.stack.append(propertyString)
         
+        return nil
     }
 
 }
@@ -1649,8 +1717,9 @@ class QuickValue : QuickObject {
         return ""
     }
 
-    override func execute() {
+    override func execute() -> Any? {
         content?.execute()
+        return nil
     }
 
 }
@@ -1702,7 +1771,7 @@ class QuickAssignment : QuickObject {
         
     }
 
-    override func execute() {
+    override func execute() -> Any? {
         leftSide?.execute()
         let leftSideResult = QuickMemory.shared.stack.popLast()
         rightSide?.execute()
@@ -1761,6 +1830,7 @@ class QuickAssignment : QuickObject {
         } else {
             QuickError.shared.setErrorMessage("Bad value from stack during assignment", withLine: -2)
         }
+        return nil
     }
     
 }
@@ -1798,7 +1868,7 @@ class QuickArray : QuickObject {
         return ""
     }
     
-    override func execute() {
+    override func execute() -> Any? {
         parameters?.execute()
         
         if subscriptValue != nil {
@@ -1811,7 +1881,7 @@ class QuickArray : QuickObject {
             QuickMemory.shared.stack.append(parametersArray[subscriptInt])
         }
         
-        
+        return nil
     }
     
 }
@@ -1836,7 +1906,7 @@ class QuickKeyValuePair : QuickObject {
         value?.checkSymbols(symbolTable: symbolTable)
     }
     
-    override func execute() {
+    override func execute() -> Any? {
         var computed : Dictionary<String, Any> = [:]
         key?.execute()
         let keyValue = QuickMemory.shared.stack.popLast()!
@@ -1844,6 +1914,7 @@ class QuickKeyValuePair : QuickObject {
         let valueValue = QuickMemory.shared.stack.popLast()!
         computed["\(keyValue)"] = valueValue
         QuickMemory.shared.stack.append(computed)
+        return nil
     }
     
 }
@@ -1886,8 +1957,8 @@ class QuickDictionary : QuickObject {
         return ""
     }
     
-    override func execute() {
-        
+    override func execute() -> Any? {
+
         var computed : Dictionary<String, Any> = [:]
         for pair in content {
             pair.execute()
@@ -1906,6 +1977,7 @@ class QuickDictionary : QuickObject {
             }
         }
         
+        return nil
         
     }
     
@@ -1935,13 +2007,14 @@ class QuickIfStatement : QuickObject {
         executionBlock?.checkSymbols(symbolTable: symbolTable)
     }
 
-    override func execute() {
-        
+    override func execute() -> Any? {
+
         expression?.execute()
         let expressionResult = QuickMemory.shared.stack.popLast() as! Bool
         if expressionResult {
             executionBlock?.execute()
         }
+        return nil
     }
     
 }
@@ -1982,7 +2055,7 @@ class QuickForLoop : QuickObject {
         executionBlock?.checkSymbols(symbolTable: symbolTable)
     }
 
-    override func execute() {
+    override func execute() -> Any? {
 
         array?.execute()
         let collection = QuickMemory.shared.stack.popLast() as! Array<Any>
@@ -2023,6 +2096,8 @@ class QuickForLoop : QuickObject {
             QuickMemory.shared.heap[identifier!.content] = cleanObject
             executionBlock?.execute()
         }
+        
+        return nil
 
     }
 
@@ -2048,8 +2123,8 @@ class QuickWhileLoop : QuickObject {
         executionBlock?.checkSymbols(symbolTable: symbolTable)
     }
 
-    override func execute() {
-        
+    override func execute() -> Any? {
+
         expression?.execute()
         var expressionResult = QuickMemory.shared.stack.popLast() as! Bool
         while expressionResult {
@@ -2057,9 +2132,37 @@ class QuickWhileLoop : QuickObject {
             expression?.execute()
             expressionResult = QuickMemory.shared.stack.popLast() as! Bool
         }
+        
+        return nil
     }
 
 }
+
+class QuickReturnStatement : QuickObject {
+    
+    var content : QuickValue?
+    var parent : QuickObject?
+    
+    override func printDebugDescription(withLevel: Int) {
+        for _ in 0...withLevel {
+            Output.shared.string.append("-")
+        }
+        Output.shared.string.append("Quick Return Statement\n")
+        content?.printDebugDescription(withLevel: withLevel + 1)
+    }
+    
+    override func checkSymbols(symbolTable : QuickSymbolTable) {
+        content?.checkSymbols(symbolTable: symbolTable)
+    }
+    
+    override func execute() -> Any? {
+        _ = content?.execute()
+        let returnValue = QuickMemory.shared.stack.popLast()
+        return returnValue
+    }
+    
+}
+
 
 // Thanks to https://stackoverflow.com/a/34308158/3266978
 extension URLSession {
