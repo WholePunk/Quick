@@ -62,6 +62,8 @@ enum TokenType {
     case DICTIONARYTYPE
     case ARRAYTYPE
     case IMAGETYPE
+    case COLORTYPE
+    case COLOR
     case RETURN
     case EOF
     case ERROR
@@ -188,6 +190,8 @@ class Tokenizer {
                     } else if asCharacter == ":" {
                         currentToken = TokenType.KEYVALUESEPERATOR
                         commitToken()
+                    } else if asCharacter == "#" {
+                        currentToken = TokenType.COLOR
                     } else {
                         currentToken = TokenType.ERROR
                     }
@@ -323,7 +327,16 @@ class Tokenizer {
                     currentToken = TokenType.ERROR
                     continue
                 }
-                
+
+                if currentToken == TokenType.COLOR {
+                    if ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "A", "B", "C", "D", "E", "F", "a", "b", "c", "d", "e", "f"].contains(asCharacter) {
+                        currentToken = TokenType.COLOR
+                    } else {
+                        currentToken = TokenType.ERROR
+                    }
+                    continue
+                }
+
                 if currentToken == TokenType.LARGERTHAN {
                     if asCharacter == "=" {
                         currentToken = TokenType.LARGERTHANOREQUAL

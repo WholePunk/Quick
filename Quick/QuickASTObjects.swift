@@ -2163,6 +2163,29 @@ class QuickReturnStatement : QuickObject {
     
 }
 
+class QuickColor : QuickObject {
+    
+    var content : UIColor?
+    var parent : QuickObject?
+    
+    override func printDebugDescription(withLevel: Int) {
+        for _ in 0...withLevel {
+            Output.shared.string.append("-")
+        }
+        Output.shared.string.append("Quick Color (\(content))\n")
+    }
+    
+    override func getType() -> String {
+        return "Color"
+    }
+    
+    override func execute() -> Any? {
+        QuickMemory.shared.stack.append(content as Any)
+        return nil
+    }
+
+}
+
 
 // Thanks to https://stackoverflow.com/a/34308158/3266978
 extension URLSession {

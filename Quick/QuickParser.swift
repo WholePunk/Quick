@@ -241,6 +241,10 @@ class Parser {
             astObject.content = lastCreatedQuickObject as? QuickDictionary
             lastCreatedQuickObject = astObject
             return true
+        } else if parseColor() {
+            astObject.content = lastCreatedQuickObject as? QuickColor
+            lastCreatedQuickObject = astObject
+            return true
         } else {
             tokenIndex = backtrackIndex
             return false
@@ -826,7 +830,12 @@ class Parser {
                 tokenIndex += 1
                 astObject.castingType = "Dictionary"
             }
-        }
+
+            if currentType() == TokenType.COLORTYPE {
+                tokenIndex += 1
+                astObject.castingType = "Color"
+            }
+}
 //
         
         if currentType() == TokenType.IN {
@@ -1014,6 +1023,13 @@ class Parser {
         if currentType() == TokenType.DICTIONARYTYPE {
             tokenIndex += 1
             astObject.castingType = "Dictionary"
+            lastCreatedQuickObject = astObject
+            return true
+        }
+
+        if currentType() == TokenType.COLORTYPE {
+            tokenIndex += 1
+            astObject.castingType = "Color"
             lastCreatedQuickObject = astObject
             return true
         }
@@ -1305,6 +1321,51 @@ class Parser {
         return true
         
     }
+    
+    func parseColor() -> Bool {
+        
+        let backtrackIndex = tokenIndex
+        let astObject = QuickColor()
+        
+        if currentType() == TokenType.COLOR {
+            let colorString = currentToken().tokenString
+            if colorString.count != 9 && colorString.count != 7 {
+                return false
+            }
+            let color = colorString.hexColor
+            
+            astObject.content = color
+            tokenIndex += 1
+        } else {
+            tokenIndex = backtrackIndex
+            return false
+        }
+                
+        lastCreatedQuickObject = astObject
+        return true
+        
+    }
+
 
 }
 
+// Thanks to https://gist.github.com/arshad/de147c42d7b3063ef7bc#gistcomment-1851050
+extension String {
+    var hexColor: UIColor {
+        let hex = trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int = UInt32()
+        Scanner(string: hex).scanHexInt32(&int)
+        let a, r, g, b: UInt32
+        switch hex.characters.count {
+        case 3: // RGB (12-bit)
+            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
+        case 6: // RGB (24-bit)
+            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
+        case 8: // ARGB (32-bit)
+            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
+        default:
+            return .clear
+        }
+        return UIColor(red: CGFloat(r) / 255, green: CGFloat(g) / 255, blue: CGFloat(b) / 255, alpha: CGFloat(a) / 255)
+    }
+}
