@@ -1288,7 +1288,19 @@ class QuickMethodCall : QuickObject {
         if methodName == "addItemToArray" {
             executeAddItemToArray(parameters!)
         }
-        
+        if methodName == "setAppVariable" {
+            executeSetAppVariable(parameters!)
+        }
+        if methodName == "getAppVariable" {
+            executeGetAppVariable(parameters!)
+        }
+        if methodName == "setScreenVariable" {
+            executeSetScreenVariable(parameters!)
+        }
+        if methodName == "getScreenVariable" {
+            executeGetScreenVariable(parameters!)
+        }
+
         return nil
 
     }
@@ -1643,6 +1655,124 @@ class QuickMethodCall : QuickObject {
         
     }
 
+    func executeSetAppVariable(_ parameters : QuickParameters) {
+        
+        if parameters.parameters.count != 2 {
+            QuickMemory.shared.stack.append(false)
+            return
+        }
+        
+        // We have two parameters.  Verify that the first is a string.  The second one can be any type.
+        let keyParameter = parameters.parameters[0]
+        _ = keyParameter.execute()
+        let keyParameterValue = QuickMemory.shared.stack.popLast()
+        
+        guard keyParameterValue as? String != nil else {
+            QuickMemory.shared.stack.append(false)
+            return
+        }
+        
+        let valueParameter = parameters.parameters[1]
+        _ = valueParameter.execute()
+        let valueParameterValue = QuickMemory.shared.stack.popLast()!
+        
+        // Save to some app-wide context
+        let fullKeyName = "app.\(keyParameterValue as! String)"
+        QuickMemory.appWide.heap[fullKeyName] = valueParameterValue
+        
+        QuickMemory.shared.stack.append(true)
+        
+    }
+
+    func executeGetAppVariable(_ parameters : QuickParameters) {
+        
+        if parameters.parameters.count != 1 {
+            QuickMemory.shared.stack.append("")
+            return
+        }
+        
+        // We have one parameter.  Verify that the first is a string.
+        let keyParameter = parameters.parameters[0]
+        _ = keyParameter.execute()
+        let keyParameterValue = QuickMemory.shared.stack.popLast()
+        
+        guard keyParameterValue as? String != nil else {
+            QuickMemory.shared.stack.append("")
+            return
+        }
+        
+        // Grab from the app wide context
+        let fullKeyName = "app.\(keyParameterValue as! String)"
+        let value = QuickMemory.appWide.heap[fullKeyName]
+        
+        if value != nil {
+            QuickMemory.shared.stack.append(value!)
+        } else {
+            QuickMemory.shared.stack.append("")
+        }
+        
+        
+    }
+
+    func executeSetScreenVariable(_ parameters : QuickParameters) {
+        
+        if parameters.parameters.count != 2 {
+            QuickMemory.shared.stack.append(false)
+            return
+        }
+        
+        // We have two parameters.  Verify that the first is a string.  The second one can be any type.
+        let keyParameter = parameters.parameters[0]
+        _ = keyParameter.execute()
+        let keyParameterValue = QuickMemory.shared.stack.popLast()
+        
+        guard keyParameterValue as? String != nil else {
+            QuickMemory.shared.stack.append(false)
+            return
+        }
+        
+        let valueParameter = parameters.parameters[1]
+        _ = valueParameter.execute()
+        let valueParameterValue = QuickMemory.shared.stack.popLast()
+        
+        // Save to some app-wide context
+        let visibleViewController = RenderCompiler.sharedInstance.appRenderer!.getVisibleViewController()!
+        let fullKeyName = "screen.\(visibleViewController.getId()).\(keyParameterValue as! String)"
+        QuickMemory.appWide.heap[fullKeyName] = valueParameterValue
+
+        QuickMemory.shared.stack.append(true)
+        
+    }
+    
+    func executeGetScreenVariable(_ parameters : QuickParameters) {
+        
+        if parameters.parameters.count != 1 {
+            QuickMemory.shared.stack.append("")
+            return
+        }
+        
+        // We have one parameter.  Verify that the first is a string.
+        let keyParameter = parameters.parameters[0]
+        _ = keyParameter.execute()
+        let keyParameterValue = QuickMemory.shared.stack.popLast()
+        
+        guard keyParameterValue as? String != nil else {
+            QuickMemory.shared.stack.append("")
+            return
+        }
+        
+        // Grab from the app wide context
+        let visibleViewController = RenderCompiler.sharedInstance.appRenderer!.getVisibleViewController()!
+        let fullKeyName = "screen.\(visibleViewController.getId()).\(keyParameterValue as! String)"
+        let value = QuickMemory.appWide.heap[fullKeyName]
+        
+        if value != nil {
+            QuickMemory.shared.stack.append(value!)
+        } else {
+            QuickMemory.shared.stack.append("")
+        }
+
+    }
 
 }
 

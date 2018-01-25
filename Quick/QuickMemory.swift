@@ -11,6 +11,7 @@ import UIKit
 class QuickMemory {
 
     static var shared = QuickMemory()
+    static var appWide = QuickMemory()
     
     func reset() {
         QuickMemory.shared = QuickMemory()
