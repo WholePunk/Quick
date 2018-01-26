@@ -19,6 +19,7 @@ class Parser {
     var root = QuickMultilineStatement()
     var symbolTable = QuickSymbolTable()
     var currentLine = 0
+    var highlightedSource : NSMutableAttributedString = NSMutableAttributedString(string: "")
     
     func currentToken() -> Token {
         return tokens[tokenIndex]
@@ -30,6 +31,32 @@ class Parser {
     
     func nextType() -> TokenType {
         return tokens[tokenIndex + 1].tokenType
+    }
+    
+    func highlightSource(fromSource: String) {
+        
+        highlightedSource = NSMutableAttributedString(string: fromSource)
+        while currentType() != TokenType.EOF {
+            if currentType() == TokenType.STRING {
+                highlightedSource.setAttributes([NSForegroundColorAttributeName: "C41A16".hexColor], range: NSRange(location: currentToken().startIndex, length: (currentToken().endIndex - currentToken().startIndex)))
+            }
+            if currentType() == TokenType.METHODNAME {
+                highlightedSource.setAttributes([NSForegroundColorAttributeName: "2E0D6E".hexColor], range: NSRange(location: currentToken().startIndex, length: (currentToken().endIndex - currentToken().startIndex)))
+            }
+            if currentType() == TokenType.ASSIGNMENT || currentType() == TokenType.OPENBRACE || currentType() == TokenType.CLOSEBRACE || currentType() == TokenType.IF || currentType() == TokenType.FOR || currentType() == TokenType.IN || currentType() == TokenType.WHILE || currentType() == TokenType.PLUS || currentType() == TokenType.MINUS || currentType() == TokenType.MULTIPLY || currentType() == TokenType.DIVIDE || currentType() == TokenType.MOD || currentType() == TokenType.OPENARGUMENTS || currentType() == TokenType.CLOSEARGUMENTS || currentType() == TokenType.ARGUMENTSEPERATOR || currentType() == TokenType.KEYVALUESEPERATOR  || currentType() == TokenType.AND  || currentType() == TokenType.OR  || currentType() == TokenType.NOT  || currentType() == TokenType.EQUALS || currentType() == TokenType.DOESNOTEQUAL || currentType() == TokenType.SMALLERTHAN || currentType() == TokenType.SMALLERTHANOREQUAL || currentType() == TokenType.LARGERTHAN || currentType() == TokenType.LARGERTHANOREQUAL || currentType() == TokenType.STARTARRAY || currentType() == TokenType.ENDARRAY || currentType() == TokenType.CAST || currentType() == TokenType.RETURN {
+                highlightedSource.setAttributes([NSForegroundColorAttributeName: "AA0D91".hexColor], range: NSRange(location: currentToken().startIndex, length: (currentToken().endIndex - currentToken().startIndex)))
+            }
+            if currentType() == TokenType.INTEGER || currentType() == TokenType.FLOAT || currentType() == TokenType.TRUE || currentType() == TokenType.FALSE || currentType() == TokenType.COLOR {
+                highlightedSource.setAttributes([NSForegroundColorAttributeName: "1C00CF".hexColor], range: NSRange(location: currentToken().startIndex, length: (currentToken().endIndex - currentToken().startIndex)))
+            }
+            if currentType() == TokenType.INTEGERTYPE || currentType() == TokenType.FLOATTYPE || currentType() == TokenType.BOOLEANTYPE || currentType() == TokenType.STRINGTYPE || currentType() == TokenType.DICTIONARYTYPE || currentType() == TokenType.ARRAYTYPE || currentType() == TokenType.COLORTYPE || currentType() == TokenType.IMAGETYPE {
+                highlightedSource.setAttributes([NSForegroundColorAttributeName: "5C2699".hexColor], range: NSRange(location: currentToken().startIndex, length: (currentToken().endIndex - currentToken().startIndex)))
+            }
+            
+            tokenIndex += 1
+        }
+        highlightedSource.addAttributes([NSFontAttributeName: UIFont.monospacedDigitSystemFont(ofSize: 18.0, weight: UIFontWeightMedium)], range: NSRange(location: 0, length: fromSource.utf16.count))
+        
     }
     
     func parse(fromSource: String) -> Bool {
@@ -56,7 +83,10 @@ class Parser {
         
         lastCreatedQuickObject = root
         
+        highlightSource(fromSource: fromSource)
+        
         // We expect that a program should be composed of newlines and statements, until it hits an EOF, then we're done.
+        tokenIndex = 0
         while currentType() != TokenType.EOF && errorAt == -1 {
             
             if currentType() == TokenType.NEWLINE {

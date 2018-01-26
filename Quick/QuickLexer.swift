@@ -15,6 +15,8 @@ import Foundation
 class Token {
     var tokenType : TokenType = TokenType.NONE
     var tokenString : String = ""
+    var startIndex : Int = -1
+    var endIndex : Int = -1
 }
 
 enum TokenType {
@@ -85,8 +87,13 @@ class Tokenizer {
     var inSubscript = true
     var tokens : Array<Token> = []
     var currentLine = 0
+    var currentCharacterIndex = -1
     
     func commitToken() {
+
+        let token = Token()
+        token.endIndex = currentCharacterIndex
+        token.startIndex = currentCharacterIndex - currentTokenString.utf16.count
 
         if currentToken == TokenType.STRING {
             // Remove the first and last characters, as they're extraneous quotes
@@ -94,7 +101,6 @@ class Tokenizer {
             currentTokenString = currentTokenString.substring(to: currentTokenString.characters.index(currentTokenString.endIndex, offsetBy: -1))
         }
         
-        let token = Token()
         token.tokenType = currentToken
         token.tokenString = currentTokenString
         tokens.append(token)
@@ -126,6 +132,9 @@ class Tokenizer {
         fromSource.append("\n")
         
         for character in fromSource.utf16 {
+            
+            currentCharacterIndex += 1
+            
             let asCharacter = Character(UnicodeScalar(character)!)
             if (CharacterSet.whitespacesAndNewlines as NSCharacterSet).characterIsMember(character) && !inString {
                 
