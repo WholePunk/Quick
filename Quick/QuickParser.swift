@@ -72,6 +72,7 @@ class Parser {
         symbolTable.addSymbol("addItemToDictionary", ofType: "Dictionary")
         symbolTable.addSymbol("removeItemFromDictionary", ofType: "Dictionary")
         symbolTable.addSymbol("addItemToArray", ofType: "Array")
+        symbolTable.addSymbol("removeItemFromArray", ofType: "Array")
         symbolTable.addSymbol("setAppVariable", ofType: "Boolean")
         symbolTable.addSymbol("getAppVariable", ofType: "")
         symbolTable.addSymbol("setScreenVariable", ofType: "Boolean")

@@ -1296,6 +1296,9 @@ class QuickMethodCall : QuickObject {
         if methodName == "addItemToArray" {
             executeAddItemToArray(parameters!)
         }
+        if methodName == "removeItemFromArray" {
+            executeRemoveItemFromArray(parameters!)
+        }
         if methodName == "setAppVariable" {
             executeSetAppVariable(parameters!)
         }
@@ -1661,6 +1664,45 @@ class QuickMethodCall : QuickObject {
             newArray.append(item)
         }
         newArray.append(valueParameterValue!)
+        
+        QuickMemory.shared.stack.append(newArray)
+        
+    }
+
+    func executeRemoveItemFromArray(_ parameters : QuickParameters) {
+        
+        if parameters.parameters.count != 2 {
+            QuickMemory.shared.stack.append([])
+            return
+        }
+        
+        // We have three parameters.  Verify that the first is an array and the second is an integer
+        var parameter = parameters.parameters[0]
+        parameter.execute()
+        let arrayParameterValue = QuickMemory.shared.stack.popLast()
+        
+        guard arrayParameterValue as? Array<Any> != nil else {
+            QuickMemory.shared.stack.append([])
+            return
+        }
+        
+        parameter = parameters.parameters[1]
+        parameter.execute()
+        let valueParameterValue = QuickMemory.shared.stack.popLast()
+        
+        guard valueParameterValue as? Int != nil else {
+            QuickMemory.shared.stack.append([])
+            return
+        }
+
+        var newArray : Array<Any> = []
+        var i = 0
+        for item in arrayParameterValue as! Array<Any> {
+            if i != valueParameterValue as! Int {
+                newArray.append(item)
+            }
+            i = i + 1
+        }
         
         QuickMemory.shared.stack.append(newArray)
         
