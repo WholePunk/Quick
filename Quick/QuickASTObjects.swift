@@ -196,8 +196,10 @@ class QuickIdentifier : QuickObject {
                     let subscriptInt = QuickMemory.shared.stack.popLast() as! Int
                     if subscriptInt >= parametersArray.count {
                         QuickError.shared.setErrorMessage("Array index is out of bounds", withLine: -2)
+                        QuickMemory.shared.stack.append("")
+                    } else {
+                        QuickMemory.shared.stack.append(parametersArray[subscriptInt])
                     }
-                    QuickMemory.shared.stack.append(parametersArray[subscriptInt])
                 } else if QuickSymbolTable.sharedRoot!.getType(ofIdentifier: content) == "Dictionary" {
                     subscriptValue?.execute()
                     let subscriptString = QuickMemory.shared.stack.popLast() as! String
@@ -1300,6 +1302,9 @@ class QuickMethodCall : QuickObject {
         if methodName == "getScreenVariable" {
             executeGetScreenVariable(parameters!)
         }
+        if methodName == "replaceString" {
+            executeReplaceString(parameters!)
+        }
 
         return nil
 
@@ -1773,6 +1778,47 @@ class QuickMethodCall : QuickObject {
         }
 
     }
+    
+    func executeReplaceString(_ parameters : QuickParameters) {
+        
+        if parameters.parameters.count != 3 {
+            QuickMemory.shared.stack.append([:])
+            return
+        }
+        
+        // We have three parameters.  Verify that all three are strings
+        var parameter = parameters.parameters[0]
+        parameter.execute()
+        let parameterValue1 = QuickMemory.shared.stack.popLast()
+        
+        guard parameterValue1 as? String != nil else {
+            QuickMemory.shared.stack.append("")
+            return
+        }
+
+        parameter = parameters.parameters[1]
+        parameter.execute()
+        let parameterValue2 = QuickMemory.shared.stack.popLast()
+        
+        guard parameterValue2 as? String != nil else {
+            QuickMemory.shared.stack.append("")
+            return
+        }
+
+        parameter = parameters.parameters[2]
+        parameter.execute()
+        let parameterValue3 = QuickMemory.shared.stack.popLast()
+        
+        guard parameterValue3 as? String != nil else {
+            QuickMemory.shared.stack.append("")
+            return
+        }
+
+        let replacedString = (parameterValue1 as! String).replacingOccurrences(of: parameterValue2 as! String, with: parameterValue3 as! String)
+        
+        QuickMemory.shared.stack.append(replacedString)
+        
+    }
 
 }
 
@@ -1941,7 +1987,8 @@ class QuickAssignment : QuickObject {
             // Check to see if left side result is an external symbol, set directly if it is
             if QuickSymbolTable.externalSymbols[leftSideResult as! String] != nil {
                 let propertyId = (leftSideResult as! NSString).components(separatedBy: ".").last! // Update with the actual property derived from left side result
-                DispatchQueue.main.async {
+                
+                if Thread.isMainThread {
                     
                     if rightSideResult is UIImage {
                         let imageUUID = UUID().uuidString
@@ -1953,7 +2000,24 @@ class QuickAssignment : QuickObject {
                         (QuickSymbolTable.externalSymbols[leftSideResult as! String] as? ViewRenderer)?.render()
                     }
                     
+                } else {
+
+                    DispatchQueue.main.sync {
+                        
+                        if rightSideResult is UIImage {
+                            let imageUUID = UUID().uuidString
+                            ImageManager.sharedInstance.addTempImage(rightSideResult as! UIImage, withName: imageUUID)
+                            (QuickSymbolTable.externalSymbols[leftSideResult as! String] as? ViewRenderer)?.updateViewProperty(forIdentifier: propertyId, withNewValue: imageUUID, withDuration: 0.3)
+                            (QuickSymbolTable.externalSymbols[leftSideResult as! String] as? ViewRenderer)?.render()
+                        } else {
+                            (QuickSymbolTable.externalSymbols[leftSideResult as! String] as? ViewRenderer)?.updateViewProperty(forIdentifier: propertyId, withNewValue: rightSideResult, withDuration: 0.3)
+                            (QuickSymbolTable.externalSymbols[leftSideResult as! String] as? ViewRenderer)?.render()
+                        }
+                        
+                    }
+                    
                 }
+            
             }
             // Not an external symbol, assign it in the heap
             QuickMemory.shared.heap[leftSideResult as! String] = rightSideResult!

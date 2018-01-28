@@ -76,6 +76,7 @@ class Parser {
         symbolTable.addSymbol("getAppVariable", ofType: "")
         symbolTable.addSymbol("setScreenVariable", ofType: "Boolean")
         symbolTable.addSymbol("getScreenVariable", ofType: "")
+        symbolTable.addSymbol("replaceString", ofType: "String")
 
         QuickSymbolTable.sharedRoot = symbolTable
         Output.shared.string = ""
