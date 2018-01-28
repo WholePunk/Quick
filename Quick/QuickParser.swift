@@ -971,9 +971,28 @@ class Parser {
         }
         astObject.executionBlock = lastCreatedQuickObject as? QuickMultilineStatement
         
+        if currentType() != TokenType.ELSE {
+            lastCreatedQuickObject = astObject
+            return true
+        }
+        tokenIndex += 1
+
+        if currentType() == TokenType.OPENBRACE {
+            tokenIndex += 1
+        } else {
+            tokenIndex = backtrackIndex
+            return false
+        }
+
+        if !parseMultilineStatement() {
+            tokenIndex = backtrackIndex
+            return false
+        }
+        astObject.elseBlock = lastCreatedQuickObject as? QuickMultilineStatement
+
         lastCreatedQuickObject = astObject
         return true
-        
+
     }
     
     func parseAssignment() -> Bool {

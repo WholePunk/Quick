@@ -728,6 +728,9 @@ class QuickEqual : QuickObject {
         } else if getType() == "Boolean" {
             let result = (leftSideValue as! Bool) == (rightSideValue as! Bool)
             QuickMemory.shared.stack.append(result)
+        } else if getType() == "Color" {
+            let result = (leftSideValue as! UIColor) == (rightSideValue as! UIColor)
+            QuickMemory.shared.stack.append(result)
         } else {
             QuickMemory.shared.stack.append(false)
         }
@@ -791,6 +794,9 @@ class QuickNotEqual : QuickObject {
             QuickMemory.shared.stack.append(result)
         } else if getType() == "Boolean" {
             let result = (leftSideValue as! Bool) != (rightSideValue as! Bool)
+            QuickMemory.shared.stack.append(result)
+        } else if getType() == "Color" {
+            let result = (leftSideValue as! UIColor) != (rightSideValue as! UIColor)
             QuickMemory.shared.stack.append(result)
         }
         return nil
@@ -2181,6 +2187,7 @@ class QuickIfStatement : QuickObject {
     
     var expression : QuickLogicalExpression?
     var executionBlock : QuickMultilineStatement?
+    var elseBlock : QuickMultilineStatement?
     var parent : QuickObject?
     
     override func printDebugDescription(withLevel: Int) {
@@ -2190,15 +2197,18 @@ class QuickIfStatement : QuickObject {
         Output.shared.string.append("Quick If Statement\n")
         expression?.printDebugDescription(withLevel: withLevel + 1)
         executionBlock?.printDebugDescription(withLevel: withLevel + 1)
+        elseBlock?.printDebugDescription(withLevel: withLevel + 1)
     }
     
     override func addSymbols(symbolTable : QuickSymbolTable) {
         executionBlock?.addSymbols(symbolTable: symbolTable)
+        elseBlock?.addSymbols(symbolTable: symbolTable)
     }
     
     override func checkSymbols(symbolTable : QuickSymbolTable) {
         expression?.checkSymbols(symbolTable: symbolTable)
         executionBlock?.checkSymbols(symbolTable: symbolTable)
+        elseBlock?.checkSymbols(symbolTable: symbolTable)
     }
 
     override func execute() -> Any? {
@@ -2207,6 +2217,8 @@ class QuickIfStatement : QuickObject {
         let expressionResult = QuickMemory.shared.stack.popLast() as! Bool
         if expressionResult {
             executionBlock?.execute()
+        } else {
+            elseBlock?.execute()
         }
         return nil
     }

@@ -32,6 +32,7 @@ enum TokenType {
     case IN
     case WHILE
     case IF
+    case ELSE
     case PLUS
     case MINUS
     case MULTIPLY
@@ -267,7 +268,11 @@ class Tokenizer {
                     if currentTokenString == "if" {
                         currentToken = TokenType.IF
                     }
-                    
+
+                    if currentTokenString == "else" {
+                        currentToken = TokenType.ELSE
+                    }
+
                     if currentTokenString == "true" {
                         currentToken = TokenType.TRUE
                     }
