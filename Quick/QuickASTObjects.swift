@@ -1337,6 +1337,9 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         if methodName == "getImageFromCamera" {
             executeGetImageFromCamera()
         }
+        if methodName == "getImageFromLibrary" {
+            executeGetImageFromLibrary()
+        }
 
         return nil
 
@@ -2100,7 +2103,26 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         cameraSemaphore.wait()
         
     }
-    
+
+    func executeGetImageFromLibrary() {
+        
+        DispatchQueue.main.async {
+            
+            let visibleViewController = RenderCompiler.sharedInstance.appRenderer?.getVisibleViewController()
+            
+            if visibleViewController != nil {
+                let imagePickerController = UIImagePickerController()
+                imagePickerController.delegate = self as! UIImagePickerControllerDelegate & UINavigationControllerDelegate
+                imagePickerController.sourceType = UIImagePickerControllerSourceType.photoLibrary
+                
+                visibleViewController!.viewController!.present(imagePickerController, animated: true, completion: nil)
+            }
+        }
+        
+        cameraSemaphore.wait()
+        
+    }
+
     func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
         QuickMemory.shared.stack.append(UIImage(named: "blank"))
         cameraSemaphore.signal()
