@@ -1323,6 +1323,9 @@ class QuickMethodCall : QuickObject {
         if methodName == "popToRootScreen" {
             executePopToRootScreen()
         }
+        if methodName == "showAlert" {
+            executeShowAlert(parameters!)
+        }
 
         return nil
 
@@ -1965,6 +1968,39 @@ class QuickMethodCall : QuickObject {
             PreviewViewController.previewViewController?.popToRoot()
         })
 
+        QuickMemory.shared.stack.append("")
+        
+    }
+
+    func executeShowAlert(_ parameters : QuickParameters) {
+        
+        if parameters.parameters.count <= 2 { // We need at least one button
+            QuickMemory.shared.stack.append("")
+            return
+        }
+        
+        // Each parameter has to be a string
+        var strings : Array<String> = []
+        for parameter in parameters.parameters {
+            _ = parameter.execute()
+            let value = QuickMemory.shared.stack.popLast()
+            if value as? String == nil {
+                QuickMemory.shared.stack.append("")
+                return
+            }
+            strings.insert(value as! String, at: 0)
+        }
+        
+        
+        
+        let alertController = UIAlertController(title: strings.popLast(), message: strings.popLast(), preferredStyle: .alert)
+        for string in strings.reversed() {
+            alertController.addAction(UIAlertAction(title: string, style: .default, handler: nil))
+        }
+        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now(), execute: {
+            PreviewViewController.previewViewController.show(alertController, sender: self)
+        })
+        
         QuickMemory.shared.stack.append("")
         
     }

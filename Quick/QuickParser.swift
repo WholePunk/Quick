@@ -81,6 +81,7 @@ class Parser {
         symbolTable.addSymbol("pushScreen", ofType: "String")
         symbolTable.addSymbol("popScreen", ofType: "String")
         symbolTable.addSymbol("popToRootScreen", ofType: "String")
+        symbolTable.addSymbol("showAlert", ofType: "String")
 
         QuickSymbolTable.sharedRoot = symbolTable
         Output.shared.string = ""
