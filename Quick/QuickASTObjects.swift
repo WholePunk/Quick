@@ -1328,6 +1328,12 @@ class QuickMethodCall : QuickObject {
         if methodName == "showAlert" {
             executeShowAlert(parameters!)
         }
+        if methodName == "saveToFile" {
+            executeSaveToFile(parameters!)
+        }
+        if methodName == "readFromFile" {
+            executeReadFromFile(parameters!)
+        }
 
         return nil
 
@@ -1997,6 +2003,80 @@ class QuickMethodCall : QuickObject {
         QuickMemory.shared.stack.append("")
         
     }
+    
+    func executeSaveToFile(_ parameters : QuickParameters) {
+        
+        if parameters.parameters.count != 2 {
+            QuickMemory.shared.stack.append(false)
+            return
+        }
+        
+        // Two parameters, both should be strings
+        var parameter = parameters.parameters[0]
+        parameter.execute()
+        let dataValue = QuickMemory.shared.stack.popLast()
+        
+        guard dataValue as? String != nil else {
+            QuickMemory.shared.stack.append(false)
+            return
+        }
+        
+        parameter = parameters.parameters[1]
+        parameter.execute()
+        let pathValue = QuickMemory.shared.stack.popLast()
+        
+        guard pathValue as? String != nil else {
+            QuickMemory.shared.stack.append(false)
+            return
+        }
+        
+        let documentsUrl : URL = FileManager.default.urls(for : .applicationSupportDirectory, in : .userDomainMask)[0]
+        let sandboxPathForCodelessDoc = documentsUrl.appendingPathComponent("Sandbox").appendingPathComponent(ProjectManager.sharedInstance.currentProjectName)
+        try? FileManager.default.createDirectory(at: sandboxPathForCodelessDoc, withIntermediateDirectories: true, attributes: nil)
+        let documentPath = sandboxPathForCodelessDoc.appendingPathComponent(pathValue as! String)
+        
+        do {
+            try (dataValue as! NSString).write(to: documentPath, atomically: true, encoding: String.Encoding.utf8.rawValue)
+        } catch {
+            QuickMemory.shared.stack.append(false)
+            return
+        }
+        
+        QuickMemory.shared.stack.append(true)
+        
+    }
+
+    func executeReadFromFile(_ parameters : QuickParameters) {
+        
+        if parameters.parameters.count != 1 {
+            QuickMemory.shared.stack.append("")
+            return
+        }
+        
+        // We just need the nane if the file
+        var parameter = parameters.parameters[0]
+        parameter.execute()
+        let pathValue = QuickMemory.shared.stack.popLast()
+        
+        guard pathValue as? String != nil else {
+            QuickMemory.shared.stack.append("")
+            return
+        }
+        
+        let documentsUrl : URL = FileManager.default.urls(for : .applicationSupportDirectory, in : .userDomainMask)[0]
+        let sandboxPathForCodelessDoc = documentsUrl.appendingPathComponent("Sandbox").appendingPathComponent(ProjectManager.sharedInstance.currentProjectName)
+        let documentPath = sandboxPathForCodelessDoc.appendingPathComponent(pathValue as! String)
+        
+        do {
+            let string = try NSString(contentsOf: documentPath, encoding: String.Encoding.utf8.rawValue)
+            QuickMemory.shared.stack.append(string)
+        } catch {
+            QuickMemory.shared.stack.append("")
+            return
+        }
+        
+    }
+
 
 
 }
