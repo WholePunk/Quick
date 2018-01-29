@@ -19,7 +19,11 @@ class QuickMemory {
 //        QuickMemory.shared = QuickMemory()
     }
     
+    let heapSemaphore = DispatchSemaphore(value: 1)
+    
     func setObject(_ object: Any, forKey: String, inHeapForParser: Parser?) {
+        
+        heapSemaphore.wait()
         
         var key = "AppWide"
         if inHeapForParser != nil {
@@ -32,6 +36,7 @@ class QuickMemory {
         
         heaps[key]![forKey] = object
 
+        heapSemaphore.signal()
     }
     
     func getObjectForKey(_ key: String, inHeapForParser: Parser?) -> Any {
@@ -54,7 +59,11 @@ class QuickMemory {
 
     }
     
+    let stackSemaphore = DispatchSemaphore(value: 1)
+    
     func pushObject(_ object: Any, inStackForParser: Parser?) {
+        
+        stackSemaphore.wait()
         
         var key = "AppWide"
         if inStackForParser != nil {
@@ -66,6 +75,8 @@ class QuickMemory {
         }
         
         stacks[key]!.append(object)
+        
+        stackSemaphore.signal()
     }
     
     func popObject(inStackForParser: Parser?) -> Any {
