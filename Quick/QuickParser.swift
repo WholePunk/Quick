@@ -85,6 +85,7 @@ class Parser {
         symbolTable.addSymbol("showAlert", ofType: "String")
         symbolTable.addSymbol("saveToFile", ofType: "Boolean")
         symbolTable.addSymbol("readFromFile", ofType: "String")
+        symbolTable.addSymbol("getImageFromCamera", ofType: "Image")
 
         QuickSymbolTable.sharedRoot = symbolTable
         Output.shared.string = ""

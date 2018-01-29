@@ -10,7 +10,7 @@
 /* Abstract Syntax Tree */
 /************************/
 
-class QuickObject {
+class QuickObject : NSObject {
     
     var parser : Parser?
     
@@ -1245,7 +1245,7 @@ class QuickParameters : QuickObject {
 
 }
 
-class QuickMethodCall : QuickObject {
+class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     
     var methodName = ""
     var parameters : QuickParameters?
@@ -1333,6 +1333,9 @@ class QuickMethodCall : QuickObject {
         }
         if methodName == "readFromFile" {
             executeReadFromFile(parameters!)
+        }
+        if methodName == "getImageFromCamera" {
+            executeGetImageFromCamera()
         }
 
         return nil
@@ -2077,8 +2080,54 @@ class QuickMethodCall : QuickObject {
         
     }
 
+    let cameraSemaphore = DispatchSemaphore(value: 0)
+    
+    func executeGetImageFromCamera() {
+        
+        DispatchQueue.main.async {
+            
+            let visibleViewController = RenderCompiler.sharedInstance.appRenderer?.getVisibleViewController()
+            
+            if visibleViewController != nil {
+                let imagePickerController = UIImagePickerController()
+                imagePickerController.delegate = self as! UIImagePickerControllerDelegate & UINavigationControllerDelegate
+                imagePickerController.sourceType = UIImagePickerControllerSourceType.camera
+                
+                visibleViewController!.viewController!.present(imagePickerController, animated: true, completion: nil)
+            }
+        }
+        
+        cameraSemaphore.wait()
+        
+    }
+    
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        QuickMemory.shared.stack.append(UIImage(named: "blank"))
+        cameraSemaphore.signal()
+        picker.presentingViewController?.dismiss(animated: true, completion: {
+            // https://stackoverflow.com/questions/32455429/wrong-screen-size-after-dismissing-uiimagepickercontroller
+            let visibleViewController = RenderCompiler.sharedInstance.appRenderer?.getVisibleViewController()
+            visibleViewController!.viewController!.view.frame = PreviewViewController.previewViewController.screenContainer.bounds
+            visibleViewController!.viewController!.view.layoutIfNeeded()
+            
+            visibleViewController!.viewController!.tabBarController?.view.frame = PreviewViewController.previewViewController.screenContainer.bounds
+            visibleViewController!.viewController!.tabBarController?.view.layoutIfNeeded()
+        })
+    }
 
-
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
+        QuickMemory.shared.stack.append(info[UIImagePickerControllerOriginalImage])
+        cameraSemaphore.signal()
+        picker.presentingViewController?.dismiss(animated: true, completion: {
+            // https://stackoverflow.com/questions/32455429/wrong-screen-size-after-dismissing-uiimagepickercontroller
+            let visibleViewController = RenderCompiler.sharedInstance.appRenderer?.getVisibleViewController()
+            visibleViewController!.viewController!.view.frame = PreviewViewController.previewViewController.screenContainer.bounds
+            visibleViewController!.viewController!.view.layoutIfNeeded()
+            
+            visibleViewController!.viewController!.tabBarController?.view.frame = PreviewViewController.previewViewController.screenContainer.bounds
+            visibleViewController!.viewController!.tabBarController?.view.layoutIfNeeded()
+        })
+    }
 }
 
 class QuickProperty : QuickObject {
