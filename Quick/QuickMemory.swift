@@ -12,7 +12,7 @@ class QuickMemory {
 
     static var shared = QuickMemory()
     
-    var stack : Array<Any> = []
+    var stacks : Dictionary<String, Array<Any>> = [:]
     var heaps : Dictionary<String, Dictionary<String, Any>> = [:]
 
     func reset() {
@@ -52,6 +52,39 @@ class QuickMemory {
         
         return returnValue!
 
+    }
+    
+    func pushObject(_ object: Any, inStackForParser: Parser?) {
+        
+        var key = "AppWide"
+        if inStackForParser != nil {
+            key = inStackForParser!.uuid
+        }
+        
+        if stacks[key] == nil {
+            stacks[key] = Array<Any>()
+        }
+        
+        stacks[key]!.append(object)
+    }
+    
+    func popObject(inStackForParser: Parser?) -> Any {
+        
+        var parserKey = "AppWide"
+        if inStackForParser != nil {
+            parserKey = inStackForParser!.uuid
+        }
+        
+        if stacks[parserKey] == nil {
+            stacks[parserKey] = Array<Any>()
+        }
+        
+        var returnValue = stacks[parserKey]!.popLast()
+        if returnValue == nil {
+            returnValue = ""
+        }
+        
+        return returnValue!
     }
     
 //    func heapForParser(_ parser: Parser) -> Dictionary<String, Any> {

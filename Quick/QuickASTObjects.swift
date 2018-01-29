@@ -124,7 +124,7 @@ class QuickString : QuickObject {
     }
     
     override func execute() -> Any? {
-        QuickMemory.shared.stack.append(content)
+        QuickMemory.shared.pushObject(content, inStackForParser: self.parser!)
         return nil
     }
 
@@ -190,26 +190,26 @@ class QuickIdentifier : QuickObject {
         } else {
             
             if subscriptValue == nil {
-                QuickMemory.shared.stack.append(storedValue)
+                QuickMemory.shared.pushObject(storedValue, inStackForParser: self.parser!)
             } else {
                 if QuickSymbolTable.sharedRoot!.getType(ofIdentifier: content) == "Array" {
                     let parametersArray = storedValue as! Array<Any>
                     subscriptValue?.execute()
-                    let subscriptInt = QuickMemory.shared.stack.popLast() as! Int
+                    let subscriptInt = QuickMemory.shared.popObject(inStackForParser: self.parser!) as! Int
                     if subscriptInt >= parametersArray.count {
                         QuickError.shared.setErrorMessage("Array index is out of bounds", withLine: -2)
-                        QuickMemory.shared.stack.append("")
+                        QuickMemory.shared.pushObject("", inStackForParser: self.parser!)
                     } else {
-                        QuickMemory.shared.stack.append(parametersArray[subscriptInt])
+                        QuickMemory.shared.pushObject(parametersArray[subscriptInt], inStackForParser: self.parser!)
                     }
                 } else if QuickSymbolTable.sharedRoot!.getType(ofIdentifier: content) == "Dictionary" {
                     subscriptValue?.execute()
-                    let subscriptString = QuickMemory.shared.stack.popLast() as! String
+                    let subscriptString = QuickMemory.shared.popObject(inStackForParser: self.parser!) as! String
                     let dictionary = storedValue as! Dictionary<String, Any>
                     if dictionary[subscriptString] == nil {
-                        QuickMemory.shared.stack.append("NULL")
+                        QuickMemory.shared.pushObject("", inStackForParser: self.parser!)
                     } else {
-                        QuickMemory.shared.stack.append(dictionary[subscriptString]!)
+                        QuickMemory.shared.pushObject(dictionary[subscriptString]!, inStackForParser: self.parser!)
                     }
                 }
             }
@@ -237,7 +237,7 @@ class QuickInteger : QuickObject {
     }
     
     override func execute() -> Any? {
-        QuickMemory.shared.stack.append(content)
+        QuickMemory.shared.pushObject(content, inStackForParser: self.parser!)
         return nil
     }
     
@@ -260,7 +260,7 @@ class QuickFloat : QuickObject {
     }
 
     override func execute() -> Any? {
-        QuickMemory.shared.stack.append(content)
+        QuickMemory.shared.pushObject(content, inStackForParser: self.parser!)
         return nil
     }
 
@@ -283,7 +283,7 @@ class QuickTrue : QuickObject {
     }
     
     override func execute() -> Any? {
-        QuickMemory.shared.stack.append(content)
+        QuickMemory.shared.pushObject(content, inStackForParser: self.parser!)
         return nil
     }
     
@@ -307,7 +307,7 @@ class QuickFalse : QuickObject {
     }
     
     override func execute() -> Any? {
-        QuickMemory.shared.stack.append(content)
+        QuickMemory.shared.pushObject(content, inStackForParser: self.parser!)
         return nil
     }
 
@@ -418,12 +418,12 @@ class QuickPlus : QuickObject {
     
     override func execute() -> Any? {
         leftSide?.execute()
-        var leftSideValue = QuickMemory.shared.stack.popLast()
+        var leftSideValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         rightSide?.execute()
-        var rightSideValue = QuickMemory.shared.stack.popLast()
+        var rightSideValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         if getType() == "Integer" {
             let computed = (leftSideValue as! Int) + (rightSideValue as! Int)
-            QuickMemory.shared.stack.append(computed)
+            QuickMemory.shared.pushObject(computed, inStackForParser: self.parser!)
         } else if getType() == "Float" {
             if leftSideValue is CGFloat {
                 leftSideValue = Float(leftSideValue as! CGFloat)
@@ -432,9 +432,9 @@ class QuickPlus : QuickObject {
                 rightSideValue = Float(rightSideValue as! CGFloat)
             }
             let computed = (leftSideValue as! Float) + (rightSideValue as! Float)
-            QuickMemory.shared.stack.append(computed)
+            QuickMemory.shared.pushObject(computed, inStackForParser: self.parser!)
         } else {
-            QuickMemory.shared.stack.append(0)
+            QuickMemory.shared.pushObject(0, inStackForParser: self.parser!)
         }
         return nil
     }
@@ -482,17 +482,17 @@ class QuickMinus : QuickObject {
     
     override func execute() -> Any? {
         leftSide?.execute()
-        let leftSideValue = QuickMemory.shared.stack.popLast()
+        let leftSideValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         rightSide?.execute()
-        let rightSideValue = QuickMemory.shared.stack.popLast()
+        let rightSideValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         if getType() == "Integer" {
             let computed = (leftSideValue as! Int) - (rightSideValue as! Int)
-            QuickMemory.shared.stack.append(computed)
+            QuickMemory.shared.pushObject(computed, inStackForParser: self.parser!)
         } else if getType() == "Float" {
             let computed = (leftSideValue as! Float) - (rightSideValue as! Float)
-            QuickMemory.shared.stack.append(computed)
+            QuickMemory.shared.pushObject(computed, inStackForParser: self.parser!)
         } else {
-            QuickMemory.shared.stack.append(0)
+            QuickMemory.shared.pushObject(0, inStackForParser: self.parser!)
         }
         return nil
     }
@@ -540,17 +540,17 @@ class QuickMultiply : QuickObject {
 
     override func execute() -> Any? {
         leftSide?.execute()
-        let leftSideValue = QuickMemory.shared.stack.popLast()
+        let leftSideValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         rightSide?.execute()
-        let rightSideValue = QuickMemory.shared.stack.popLast()
+        let rightSideValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         if getType() == "Integer" {
             let computed = (leftSideValue as! Int) * (rightSideValue as! Int)
-            QuickMemory.shared.stack.append(computed)
+            QuickMemory.shared.pushObject(computed, inStackForParser: self.parser!)
         } else if getType() == "Float" {
             let computed = (leftSideValue as! Float) * (rightSideValue as! Float)
-            QuickMemory.shared.stack.append(computed)
+            QuickMemory.shared.pushObject(computed, inStackForParser: self.parser!)
         } else {
-            QuickMemory.shared.stack.append(0)
+            QuickMemory.shared.pushObject(0, inStackForParser: self.parser!)
         }
         return nil
     }
@@ -598,17 +598,17 @@ class QuickDivide : QuickObject {
 
     override func execute() -> Any? {
         leftSide?.execute()
-        let leftSideValue = QuickMemory.shared.stack.popLast()
+        let leftSideValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         rightSide?.execute()
-        let rightSideValue = QuickMemory.shared.stack.popLast()
+        let rightSideValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         if getType() == "Integer" {
             let computed = (leftSideValue as! Int) / (rightSideValue as! Int)
-            QuickMemory.shared.stack.append(computed)
+            QuickMemory.shared.pushObject(computed, inStackForParser: self.parser!)
         } else if getType() == "Float" {
             let computed = (leftSideValue as! Float) / (rightSideValue as! Float)
-            QuickMemory.shared.stack.append(computed)
+            QuickMemory.shared.pushObject(computed, inStackForParser: self.parser!)
         } else {
-            QuickMemory.shared.stack.append(0)
+            QuickMemory.shared.pushObject(0, inStackForParser: self.parser!)
         }
         return nil
     }
@@ -656,17 +656,17 @@ class QuickMod : QuickObject {
 
     override func execute() -> Any? {
         leftSide?.execute()
-        let leftSideValue = QuickMemory.shared.stack.popLast()
+        let leftSideValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         rightSide?.execute()
-        let rightSideValue = QuickMemory.shared.stack.popLast()
+        let rightSideValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         if getType() == "Integer" {
             let computed = (leftSideValue as! Int) % (rightSideValue as! Int)
-            QuickMemory.shared.stack.append(computed)
+            QuickMemory.shared.pushObject(computed, inStackForParser: self.parser!)
         } else if getType() == "Float" {
             let computed = (leftSideValue as! Float).truncatingRemainder(dividingBy: (rightSideValue as! Float))
-            QuickMemory.shared.stack.append(computed)
+            QuickMemory.shared.pushObject(computed, inStackForParser: self.parser!)
         } else {
-            QuickMemory.shared.stack.append(0)
+            QuickMemory.shared.pushObject(0, inStackForParser: self.parser!)
         }
         return nil
     }
@@ -715,26 +715,26 @@ class QuickEqual : QuickObject {
 
     override func execute() -> Any? {
         leftSide?.execute()
-        let leftSideValue = QuickMemory.shared.stack.popLast()
+        let leftSideValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         rightSide?.execute()
-        let rightSideValue = QuickMemory.shared.stack.popLast()
+        let rightSideValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         if getType() == "Integer" {
             let result = (leftSideValue as! Int) == (rightSideValue as! Int)
-            QuickMemory.shared.stack.append(result)
+            QuickMemory.shared.pushObject(result, inStackForParser: self.parser!)
         } else if getType() == "Float" {
             let result = (leftSideValue as! Float) == (rightSideValue as! Float)
-            QuickMemory.shared.stack.append(result)
+            QuickMemory.shared.pushObject(result, inStackForParser: self.parser!)
         } else if getType() == "String" {
             let result = (leftSideValue as! String) == (rightSideValue as! String)
-            QuickMemory.shared.stack.append(result)
+            QuickMemory.shared.pushObject(result, inStackForParser: self.parser!)
         } else if getType() == "Boolean" {
             let result = (leftSideValue as! Bool) == (rightSideValue as! Bool)
-            QuickMemory.shared.stack.append(result)
+            QuickMemory.shared.pushObject(result, inStackForParser: self.parser!)
         } else if getType() == "Color" {
             let result = (leftSideValue as! UIColor) == (rightSideValue as! UIColor)
-            QuickMemory.shared.stack.append(result)
+            QuickMemory.shared.pushObject(result, inStackForParser: self.parser!)
         } else {
-            QuickMemory.shared.stack.append(false)
+            QuickMemory.shared.pushObject(false, inStackForParser: self.parser!)
         }
         return nil
     }
@@ -782,24 +782,24 @@ class QuickNotEqual : QuickObject {
 
     override func execute() -> Any? {
         leftSide?.execute()
-        let leftSideValue = QuickMemory.shared.stack.popLast()
+        let leftSideValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         rightSide?.execute()
-        let rightSideValue = QuickMemory.shared.stack.popLast()
+        let rightSideValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         if getType() == "Integer" {
             let result = (leftSideValue as! Int) != (rightSideValue as! Int)
-            QuickMemory.shared.stack.append(result)
+            QuickMemory.shared.pushObject(result, inStackForParser: self.parser!)
         } else if getType() == "Float" {
             let result = (leftSideValue as! Float) != (rightSideValue as! Float)
-            QuickMemory.shared.stack.append(result)
+            QuickMemory.shared.pushObject(result, inStackForParser: self.parser!)
         } else if getType() == "String" {
             let result = (leftSideValue as! String) != (rightSideValue as! String)
-            QuickMemory.shared.stack.append(result)
+            QuickMemory.shared.pushObject(result, inStackForParser: self.parser!)
         } else if getType() == "Boolean" {
             let result = (leftSideValue as! Bool) != (rightSideValue as! Bool)
-            QuickMemory.shared.stack.append(result)
+            QuickMemory.shared.pushObject(result, inStackForParser: self.parser!)
         } else if getType() == "Color" {
             let result = (leftSideValue as! UIColor) != (rightSideValue as! UIColor)
-            QuickMemory.shared.stack.append(result)
+            QuickMemory.shared.pushObject(result, inStackForParser: self.parser!)
         }
         return nil
     }
@@ -847,15 +847,15 @@ class QuickLessThan : QuickObject {
 
     override func execute() -> Any? {
         leftSide?.execute()
-        let leftSideValue = QuickMemory.shared.stack.popLast()
+        let leftSideValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         rightSide?.execute()
-        let rightSideValue = QuickMemory.shared.stack.popLast()
+        let rightSideValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         if getType() == "Integer" {
             let result = (leftSideValue as! Int) < (rightSideValue as! Int)
-            QuickMemory.shared.stack.append(result)
+            QuickMemory.shared.pushObject(result, inStackForParser: self.parser!)
         } else if getType() == "Float" {
             let result = (leftSideValue as! Float) < (rightSideValue as! Float)
-            QuickMemory.shared.stack.append(result)
+            QuickMemory.shared.pushObject(result, inStackForParser: self.parser!)
         }
         return nil
     }
@@ -903,15 +903,15 @@ class QuickGreaterThan : QuickObject {
 
     override func execute() -> Any? {
         leftSide?.execute()
-        let leftSideValue = QuickMemory.shared.stack.popLast()
+        let leftSideValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         rightSide?.execute()
-        let rightSideValue = QuickMemory.shared.stack.popLast()
+        let rightSideValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         if getType() == "Integer" {
             let result = (leftSideValue as! Int) > (rightSideValue as! Int)
-            QuickMemory.shared.stack.append(result)
+            QuickMemory.shared.pushObject(result, inStackForParser: self.parser!)
         } else if getType() == "Float" {
             let result = (leftSideValue as! Float) > (rightSideValue as! Float)
-            QuickMemory.shared.stack.append(result)
+            QuickMemory.shared.pushObject(result, inStackForParser: self.parser!)
         }
         return nil
     }
@@ -959,15 +959,15 @@ class QuickLessThanOrEqualTo : QuickObject {
 
     override func execute() -> Any? {
         leftSide?.execute()
-        let leftSideValue = QuickMemory.shared.stack.popLast()
+        let leftSideValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         rightSide?.execute()
-        let rightSideValue = QuickMemory.shared.stack.popLast()
+        let rightSideValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         if getType() == "Integer" {
             let result = (leftSideValue as! Int) <= (rightSideValue as! Int)
-            QuickMemory.shared.stack.append(result)
+            QuickMemory.shared.pushObject(result, inStackForParser: self.parser!)
         } else if getType() == "Float" {
             let result = (leftSideValue as! Float) <= (rightSideValue as! Float)
-            QuickMemory.shared.stack.append(result)
+            QuickMemory.shared.pushObject(result, inStackForParser: self.parser!)
         }
         return nil
     }
@@ -1015,15 +1015,15 @@ class QuickGreaterThanOrEqualTo : QuickObject {
 
     override func execute() -> Any? {
         leftSide?.execute()
-        let leftSideValue = QuickMemory.shared.stack.popLast()
+        let leftSideValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         rightSide?.execute()
-        let rightSideValue = QuickMemory.shared.stack.popLast()
+        let rightSideValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         if getType() == "Integer" {
             let result = (leftSideValue as! Int) >= (rightSideValue as! Int)
-            QuickMemory.shared.stack.append(result)
+            QuickMemory.shared.pushObject(result, inStackForParser: self.parser!)
         } else if getType() == "Float" {
             let result = (leftSideValue as! Float) >= (rightSideValue as! Float)
-            QuickMemory.shared.stack.append(result)
+            QuickMemory.shared.pushObject(result, inStackForParser: self.parser!)
         }
         return nil
     }
@@ -1075,11 +1075,11 @@ class QuickAnd : QuickObject {
 
     override func execute() -> Any? {
         leftSide?.execute()
-        let leftSideValue = QuickMemory.shared.stack.popLast()
+        let leftSideValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         rightSide?.execute()
-        let rightSideValue = QuickMemory.shared.stack.popLast()
+        let rightSideValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         let result = (leftSideValue as! Bool) && (rightSideValue as! Bool)
-        QuickMemory.shared.stack.append(result)
+        QuickMemory.shared.pushObject(result, inStackForParser: self.parser!)
         return nil
     }
 
@@ -1129,11 +1129,11 @@ class QuickOr : QuickObject {
 
     override func execute() -> Any? {
         leftSide?.execute()
-        let leftSideValue = QuickMemory.shared.stack.popLast()
+        let leftSideValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         rightSide?.execute()
-        let rightSideValue = QuickMemory.shared.stack.popLast()
+        let rightSideValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         let result = (leftSideValue as! Bool) || (rightSideValue as! Bool)
-        QuickMemory.shared.stack.append(result)
+        QuickMemory.shared.pushObject(result, inStackForParser: self.parser!)
         return nil
     }
 
@@ -1176,9 +1176,9 @@ class QuickNot : QuickObject {
 
     override func execute() -> Any? {
         rightSide?.execute()
-        let rightSideValue = QuickMemory.shared.stack.popLast()
+        let rightSideValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         let result = !(rightSideValue as! Bool)
-        QuickMemory.shared.stack.append(result)
+        QuickMemory.shared.pushObject(result, inStackForParser: self.parser!)
         return nil
     }
 
@@ -1237,9 +1237,9 @@ class QuickParameters : QuickObject {
         var computed : Array<Any> = []
         for parameter in parameters {
             parameter.execute()
-            computed.append(QuickMemory.shared.stack.popLast()!)
+            computed.append(QuickMemory.shared.popObject(inStackForParser: self.parser!))
         }
-        QuickMemory.shared.stack.append(computed)
+        QuickMemory.shared.pushObject(computed, inStackForParser: self.parser!)
         return nil
     }
 
@@ -1349,7 +1349,7 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         
         for parameter in parameters.parameters {
             parameter.execute()
-            let valueToPrint = QuickMemory.shared.stack.popLast()!
+            let valueToPrint = QuickMemory.shared.popObject(inStackForParser: self.parser!)
             Output.shared.userVisible.append("\(valueToPrint)\n")
         }
         
@@ -1358,23 +1358,23 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
     func executeGetJSONArrayWithParameters(_ parameters : QuickParameters) {
         
         if parameters.parameters.count > 1 || parameters.parameters.count == 0 {
-            QuickMemory.shared.stack.append([])
+            QuickMemory.shared.pushObject([], inStackForParser: self.parser!)
             return
         }
         
         // We only have a single parameter
         let parameter = parameters.parameters[0]
         parameter.execute()
-        let parameterValue = QuickMemory.shared.stack.popLast()
+        let parameterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         guard parameterValue as? String != nil else {
-            QuickMemory.shared.stack.append([])
+            QuickMemory.shared.pushObject([], inStackForParser: self.parser!)
             return
         }
         
         let url = URL(string: parameterValue as! String)
         guard url != nil else {
-            QuickMemory.shared.stack.append([])
+            QuickMemory.shared.pushObject([], inStackForParser: self.parser!)
             return
         }
         
@@ -1384,44 +1384,44 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         (data, response, error) = URLSession.shared.synchronousDataTask(with: url!)
         
         if error != nil {
-            QuickMemory.shared.stack.append([])
+            QuickMemory.shared.pushObject([], inStackForParser: self.parser!)
             return
         }
         
         do {
             if let data = data,
                 let json = try JSONSerialization.jsonObject(with: data) as? [Any] {
-                QuickMemory.shared.stack.append(json)
+                QuickMemory.shared.pushObject(json, inStackForParser: self.parser!)
                 return
             }
         } catch {
             print("Error deserializing JSON")
         }
         
-        QuickMemory.shared.stack.append([])
+        QuickMemory.shared.pushObject([], inStackForParser: self.parser!)
 
     }
     
     func executeGetJSONDictionaryWithParameters(_ parameters : QuickParameters) {
         
         if parameters.parameters.count > 1 || parameters.parameters.count == 0 {
-            QuickMemory.shared.stack.append([:])
+            QuickMemory.shared.pushObject([:], inStackForParser: self.parser!)
             return
         }
         
         // We only have a single parameter
         let parameter = parameters.parameters[0]
         parameter.execute()
-        let parameterValue = QuickMemory.shared.stack.popLast()
+        let parameterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         guard parameterValue as? String != nil else {
-            QuickMemory.shared.stack.append([:])
+            QuickMemory.shared.pushObject([:], inStackForParser: self.parser!)
             return
         }
         
         let url = URL(string: parameterValue as! String)
         guard url != nil else {
-            QuickMemory.shared.stack.append([:])
+            QuickMemory.shared.pushObject([:], inStackForParser: self.parser!)
             return
         }
         
@@ -1431,44 +1431,44 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         (data, response, error) = URLSession.shared.synchronousDataTask(with: url!)
         
         if error != nil {
-            QuickMemory.shared.stack.append([:])
+            QuickMemory.shared.pushObject([:], inStackForParser: self.parser!)
             return
         }
         
         do {
             if let data = data,
                 let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                QuickMemory.shared.stack.append(json)
+                QuickMemory.shared.pushObject(json, inStackForParser: self.parser!)
                 return
             }
         } catch {
             print("Error deserializing JSON")
         }
         
-        QuickMemory.shared.stack.append([:])
+        QuickMemory.shared.pushObject([:], inStackForParser: self.parser!)
         
     }
 
     func executeGetImageWithParameters(_ parameters : QuickParameters) {
         
         if parameters.parameters.count > 1 || parameters.parameters.count == 0 {
-            QuickMemory.shared.stack.append([:])
+            QuickMemory.shared.pushObject([:], inStackForParser: self.parser!)
             return
         }
         
         // We only have a single parameter
         let parameter = parameters.parameters[0]
         parameter.execute()
-        let parameterValue = QuickMemory.shared.stack.popLast()
+        let parameterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         guard parameterValue as? String != nil else {
-            QuickMemory.shared.stack.append([:])
+            QuickMemory.shared.pushObject([:], inStackForParser: self.parser!)
             return
         }
         
         let url = URL(string: parameterValue as! String)
         guard url != nil else {
-            QuickMemory.shared.stack.append([:])
+            QuickMemory.shared.pushObject([:], inStackForParser: self.parser!)
             return
         }
         
@@ -1478,104 +1478,104 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         (data, response, error) = URLSession.shared.synchronousDataTask(with: url!)
         
         if error != nil {
-            QuickMemory.shared.stack.append([:])
+            QuickMemory.shared.pushObject([:], inStackForParser: self.parser!)
             return
         }
         
         if let data = data,
             let image = UIImage(data: data) {
-            QuickMemory.shared.stack.append(image)
+            QuickMemory.shared.pushObject(image, inStackForParser: self.parser!)
             return
         }
         
-        QuickMemory.shared.stack.append(UIImage(named: "blank"))
+        QuickMemory.shared.pushObject(UIImage(named: "blank"), inStackForParser: self.parser!)
         
     }
 
     func executeEncodeBase64(_ parameters : QuickParameters) {
         
         if parameters.parameters.count > 1 || parameters.parameters.count == 0 {
-            QuickMemory.shared.stack.append("")
+            QuickMemory.shared.pushObject("", inStackForParser: self.parser!)
             return
         }
         
         // We only have a single parameter
         let parameter = parameters.parameters[0]
         parameter.execute()
-        let parameterValue = QuickMemory.shared.stack.popLast()
+        let parameterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         guard parameterValue as? String != nil else {
-            QuickMemory.shared.stack.append("")
+            QuickMemory.shared.pushObject("", inStackForParser: self.parser!)
             return
         }
         
         
         let base64String = (parameterValue as! String).data(using: String.Encoding.utf8)!.base64EncodedString(options: Data.Base64EncodingOptions(rawValue: 0))
         
-        QuickMemory.shared.stack.append(base64String)
+        QuickMemory.shared.pushObject(base64String, inStackForParser: self.parser!)
         
     }
 
     func executeCountArray(_ parameters : QuickParameters) {
         
         if parameters.parameters.count > 1 || parameters.parameters.count == 0 {
-            QuickMemory.shared.stack.append(0)
+            QuickMemory.shared.pushObject(0, inStackForParser: self.parser!)
             return
         }
         
         // We only have a single parameter
         let parameter = parameters.parameters[0]
         parameter.execute()
-        let parameterValue = QuickMemory.shared.stack.popLast()
+        let parameterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         guard parameterValue as? Array<Any> != nil else {
-            QuickMemory.shared.stack.append(0)
+            QuickMemory.shared.pushObject(0, inStackForParser: self.parser!)
             return
         }
         
         let count = (parameterValue as! Array<Any>).count
         
-        QuickMemory.shared.stack.append(count)
+        QuickMemory.shared.pushObject(count, inStackForParser: self.parser!)
         
     }
 
     func executeCountDictionary(_ parameters : QuickParameters) {
         
         if parameters.parameters.count > 1 || parameters.parameters.count == 0 {
-            QuickMemory.shared.stack.append(0)
+            QuickMemory.shared.pushObject(0, inStackForParser: self.parser!)
             return
         }
         
         // We only have a single parameter
         let parameter = parameters.parameters[0]
         parameter.execute()
-        let parameterValue = QuickMemory.shared.stack.popLast()
+        let parameterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         guard parameterValue as? Dictionary<String, Any> != nil else {
-            QuickMemory.shared.stack.append(0)
+            QuickMemory.shared.pushObject(0, inStackForParser: self.parser!)
             return
         }
         
         let count = (parameterValue as! Dictionary<String, Any>).count
         
-        QuickMemory.shared.stack.append(count)
+        QuickMemory.shared.pushObject(count, inStackForParser: self.parser!)
         
     }
 
     func executeGetDictionaryKeys(_ parameters : QuickParameters) {
         
         if parameters.parameters.count > 1 || parameters.parameters.count == 0 {
-            QuickMemory.shared.stack.append([])
+            QuickMemory.shared.pushObject([], inStackForParser: self.parser!)
             return
         }
         
         // We only have a single parameter
         let parameter = parameters.parameters[0]
         parameter.execute()
-        let parameterValue = QuickMemory.shared.stack.popLast()
+        let parameterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         guard parameterValue as? Dictionary<String, Any> != nil else {
-            QuickMemory.shared.stack.append([])
+            QuickMemory.shared.pushObject([], inStackForParser: self.parser!)
             return
         }
         
@@ -1584,39 +1584,39 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
             allKeys.append(key)
         }
         
-        QuickMemory.shared.stack.append(allKeys)
+        QuickMemory.shared.pushObject(allKeys, inStackForParser: self.parser!)
         
     }
     
     func executeAddItemToDictionary(_ parameters : QuickParameters) {
         
         if parameters.parameters.count != 3 {
-            QuickMemory.shared.stack.append([:])
+            QuickMemory.shared.pushObject([:], inStackForParser: self.parser!)
             return
         }
         
         // We have three parameters.  Verify that the first is a dictionary and the second is a string
         var parameter = parameters.parameters[0]
         parameter.execute()
-        let dictionaryParameterValue = QuickMemory.shared.stack.popLast()
+        let dictionaryParameterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         guard dictionaryParameterValue as? Dictionary<String, Any> != nil else {
-            QuickMemory.shared.stack.append([:])
+            QuickMemory.shared.pushObject([:], inStackForParser: self.parser!)
             return
         }
         
         parameter = parameters.parameters[1]
         parameter.execute()
-        let keyParameterValue = QuickMemory.shared.stack.popLast()
+        let keyParameterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         guard keyParameterValue as? String != nil else {
-            QuickMemory.shared.stack.append([:])
+            QuickMemory.shared.pushObject([:], inStackForParser: self.parser!)
             return
         }
         
         parameter = parameters.parameters[2]
         parameter.execute()
-        let valueParameterValue = QuickMemory.shared.stack.popLast()
+        let valueParameterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         var newDictionary : Dictionary<String, Any> = [:]
         for key in (dictionaryParameterValue as! Dictionary<String, Any>).keys {
@@ -1624,33 +1624,33 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         }
         newDictionary[keyParameterValue as! String] = valueParameterValue
         
-        QuickMemory.shared.stack.append(newDictionary)
+        QuickMemory.shared.pushObject(newDictionary, inStackForParser: self.parser!)
         
     }
 
     func executeRemoveItemFromDictionary(_ parameters : QuickParameters) {
         
         if parameters.parameters.count != 2 {
-            QuickMemory.shared.stack.append([:])
+            QuickMemory.shared.pushObject([:], inStackForParser: self.parser!)
             return
         }
         
         // We have three parameters.  Verify that the first is a dictionary and the second is a string
         var parameter = parameters.parameters[0]
         parameter.execute()
-        let dictionaryParameterValue = QuickMemory.shared.stack.popLast()
+        let dictionaryParameterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         guard dictionaryParameterValue as? Dictionary<String, Any> != nil else {
-            QuickMemory.shared.stack.append([:])
+            QuickMemory.shared.pushObject([:], inStackForParser: self.parser!)
             return
         }
         
         parameter = parameters.parameters[1]
         parameter.execute()
-        let keyParameterValue = QuickMemory.shared.stack.popLast()
+        let keyParameterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         guard keyParameterValue as? String != nil else {
-            QuickMemory.shared.stack.append([:])
+            QuickMemory.shared.pushObject([:], inStackForParser: self.parser!)
             return
         }
         
@@ -1660,64 +1660,64 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         }
         newDictionary[keyParameterValue as! String] = nil
         
-        QuickMemory.shared.stack.append(newDictionary)
+        QuickMemory.shared.pushObject(newDictionary, inStackForParser: self.parser!)
         
     }
     
     func executeAddItemToArray(_ parameters : QuickParameters) {
         
         if parameters.parameters.count != 2 {
-            QuickMemory.shared.stack.append([])
+            QuickMemory.shared.pushObject([], inStackForParser: self.parser!)
             return
         }
         
         // We have three parameters.  Verify that the first is a dictionary and the second is a string
         var parameter = parameters.parameters[0]
         parameter.execute()
-        let arrayParameterValue = QuickMemory.shared.stack.popLast()
+        let arrayParameterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         guard arrayParameterValue as? Array<Any> != nil else {
-            QuickMemory.shared.stack.append([])
+            QuickMemory.shared.pushObject([], inStackForParser: self.parser!)
             return
         }
         
         parameter = parameters.parameters[1]
         parameter.execute()
-        let valueParameterValue = QuickMemory.shared.stack.popLast()
+        let valueParameterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         var newArray : Array<Any> = []
         for item in arrayParameterValue as! Array<Any> {
             newArray.append(item)
         }
-        newArray.append(valueParameterValue!)
+        newArray.append(valueParameterValue)
         
-        QuickMemory.shared.stack.append(newArray)
+        QuickMemory.shared.pushObject(newArray, inStackForParser: self.parser!)
         
     }
 
     func executeRemoveItemFromArray(_ parameters : QuickParameters) {
         
         if parameters.parameters.count != 2 {
-            QuickMemory.shared.stack.append([])
+            QuickMemory.shared.pushObject([], inStackForParser: self.parser!)
             return
         }
         
         // We have three parameters.  Verify that the first is an array and the second is an integer
         var parameter = parameters.parameters[0]
         parameter.execute()
-        let arrayParameterValue = QuickMemory.shared.stack.popLast()
+        let arrayParameterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         guard arrayParameterValue as? Array<Any> != nil else {
-            QuickMemory.shared.stack.append([])
+            QuickMemory.shared.pushObject([], inStackForParser: self.parser!)
             return
         }
         
         parameter = parameters.parameters[1]
         parameter.execute()
-        let valueParameterValue = QuickMemory.shared.stack.popLast()
+        let valueParameterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         guard valueParameterValue as? Int != nil else {
-            QuickMemory.shared.stack.append([])
+            QuickMemory.shared.pushObject([], inStackForParser: self.parser!)
             return
         }
 
@@ -1730,53 +1730,53 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
             i = i + 1
         }
         
-        QuickMemory.shared.stack.append(newArray)
+        QuickMemory.shared.pushObject(newArray, inStackForParser: self.parser!)
         
     }
 
     func executeSetAppVariable(_ parameters : QuickParameters) {
         
         if parameters.parameters.count != 2 {
-            QuickMemory.shared.stack.append(false)
+            QuickMemory.shared.pushObject(false, inStackForParser: self.parser!)
             return
         }
         
         // We have two parameters.  Verify that the first is a string.  The second one can be any type.
         let keyParameter = parameters.parameters[0]
         _ = keyParameter.execute()
-        let keyParameterValue = QuickMemory.shared.stack.popLast()
+        let keyParameterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         guard keyParameterValue as? String != nil else {
-            QuickMemory.shared.stack.append(false)
+            QuickMemory.shared.pushObject(false, inStackForParser: self.parser!)
             return
         }
         
         let valueParameter = parameters.parameters[1]
         _ = valueParameter.execute()
-        let valueParameterValue = QuickMemory.shared.stack.popLast()!
+        let valueParameterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         // Save to some app-wide context
         let fullKeyName = "app.\(keyParameterValue as! String)"
         QuickMemory.shared.setObject(valueParameterValue as Any, forKey: fullKeyName, inHeapForParser: nil)
         
-        QuickMemory.shared.stack.append(true)
+        QuickMemory.shared.pushObject(true, inStackForParser: self.parser!)
         
     }
 
     func executeGetAppVariable(_ parameters : QuickParameters) {
         
         if parameters.parameters.count != 1 {
-            QuickMemory.shared.stack.append("")
+            QuickMemory.shared.pushObject("", inStackForParser: self.parser!)
             return
         }
         
         // We have one parameter.  Verify that the first is a string.
         let keyParameter = parameters.parameters[0]
         _ = keyParameter.execute()
-        let keyParameterValue = QuickMemory.shared.stack.popLast()
+        let keyParameterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         guard keyParameterValue as? String != nil else {
-            QuickMemory.shared.stack.append("")
+            QuickMemory.shared.pushObject("", inStackForParser: self.parser!)
             return
         }
         
@@ -1784,54 +1784,54 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         let fullKeyName = "app.\(keyParameterValue as! String)"
         let value = QuickMemory.shared.getObjectForKey(fullKeyName, inHeapForParser: nil)
         
-        QuickMemory.shared.stack.append(value)
+        QuickMemory.shared.pushObject("", inStackForParser: self.parser!)
         
     }
 
     func executeSetScreenVariable(_ parameters : QuickParameters) {
         
         if parameters.parameters.count != 2 {
-            QuickMemory.shared.stack.append(false)
+            QuickMemory.shared.pushObject(false, inStackForParser: self.parser!)
             return
         }
         
         // We have two parameters.  Verify that the first is a string.  The second one can be any type.
         let keyParameter = parameters.parameters[0]
         _ = keyParameter.execute()
-        let keyParameterValue = QuickMemory.shared.stack.popLast()
+        let keyParameterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         guard keyParameterValue as? String != nil else {
-            QuickMemory.shared.stack.append(false)
+            QuickMemory.shared.pushObject(false, inStackForParser: self.parser!)
             return
         }
         
         let valueParameter = parameters.parameters[1]
         _ = valueParameter.execute()
-        let valueParameterValue = QuickMemory.shared.stack.popLast()
+        let valueParameterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         // Save to some app-wide context
         let visibleViewController = RenderCompiler.sharedInstance.appRenderer!.getVisibleViewController()!
         let fullKeyName = "screen.\(visibleViewController.getId()).\(keyParameterValue as! String)"
         QuickMemory.shared.setObject(valueParameterValue as Any, forKey: fullKeyName, inHeapForParser: nil)
 
-        QuickMemory.shared.stack.append(true)
+        QuickMemory.shared.pushObject(true, inStackForParser: self.parser!)
         
     }
     
     func executeGetScreenVariable(_ parameters : QuickParameters) {
         
         if parameters.parameters.count != 1 {
-            QuickMemory.shared.stack.append("")
+            QuickMemory.shared.pushObject("", inStackForParser: self.parser!)
             return
         }
         
         // We have one parameter.  Verify that the first is a string.
         let keyParameter = parameters.parameters[0]
         _ = keyParameter.execute()
-        let keyParameterValue = QuickMemory.shared.stack.popLast()
+        let keyParameterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         guard keyParameterValue as? String != nil else {
-            QuickMemory.shared.stack.append("")
+            QuickMemory.shared.pushObject("", inStackForParser: self.parser!)
             return
         }
         
@@ -1840,64 +1840,64 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         let fullKeyName = "screen.\(visibleViewController.getId()).\(keyParameterValue as! String)"
         let value = QuickMemory.shared.getObjectForKey(fullKeyName, inHeapForParser: nil)
         
-        QuickMemory.shared.stack.append(value)
+        QuickMemory.shared.pushObject(value, inStackForParser: self.parser!)
 
     }
     
     func executeReplaceString(_ parameters : QuickParameters) {
         
         if parameters.parameters.count != 3 {
-            QuickMemory.shared.stack.append([:])
+            QuickMemory.shared.pushObject([:], inStackForParser: self.parser!)
             return
         }
         
         // We have three parameters.  Verify that all three are strings
         var parameter = parameters.parameters[0]
         parameter.execute()
-        let parameterValue1 = QuickMemory.shared.stack.popLast()
+        let parameterValue1 = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         guard parameterValue1 as? String != nil else {
-            QuickMemory.shared.stack.append("")
+            QuickMemory.shared.pushObject("", inStackForParser: self.parser!)
             return
         }
         
         parameter = parameters.parameters[1]
         parameter.execute()
-        let parameterValue2 = QuickMemory.shared.stack.popLast()
+        let parameterValue2 = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         guard parameterValue2 as? String != nil else {
-            QuickMemory.shared.stack.append("")
+            QuickMemory.shared.pushObject("", inStackForParser: self.parser!)
             return
         }
         
         parameter = parameters.parameters[2]
         parameter.execute()
-        let parameterValue3 = QuickMemory.shared.stack.popLast()
+        let parameterValue3 = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         guard parameterValue3 as? String != nil else {
-            QuickMemory.shared.stack.append("")
+            QuickMemory.shared.pushObject("", inStackForParser: self.parser!)
             return
         }
         
         let replacedString = (parameterValue1 as! String).replacingOccurrences(of: parameterValue2 as! String, with: parameterValue3 as! String)
         
-        QuickMemory.shared.stack.append(replacedString)
+        QuickMemory.shared.pushObject(replacedString, inStackForParser: self.parser!)
         
     }
 
     func executePushScreen(_ parameters : QuickParameters) {
         
         if parameters.parameters.count != 1 && parameters.parameters.count != 2 {
-            QuickMemory.shared.stack.append("")
+            QuickMemory.shared.pushObject("", inStackForParser: self.parser!)
             return
         }
         
         var parameter = parameters.parameters[0]
         parameter.execute()
-        let parameterValue1 = QuickMemory.shared.stack.popLast()
+        let parameterValue1 = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         guard parameterValue1 as? String != nil else {
-            QuickMemory.shared.stack.append("")
+            QuickMemory.shared.pushObject("", inStackForParser: self.parser!)
             return
         }
         
@@ -1935,10 +1935,10 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
             if parameters.parameters.count == 2 {
                 let parameter2 = parameters.parameters[1]
                 _ = parameter2.execute()
-                let parameterValue2 = QuickMemory.shared.stack.popLast()
+                let parameterValue2 = QuickMemory.shared.popObject(inStackForParser: self.parser!)
                 
                 guard parameterValue2 as? Dictionary<String, Any> != nil else {
-                    QuickMemory.shared.stack.append("")
+                    QuickMemory.shared.pushObject("", inStackForParser: self.parser!)
                     return
                 }
                 
@@ -1953,7 +1953,7 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
             PreviewViewController.previewViewController?.push(viewControllerRenderer : renderer)
         })
         
-        QuickMemory.shared.stack.append("")
+        QuickMemory.shared.pushObject("", inStackForParser: self.parser!)
 
     }
     
@@ -1963,7 +1963,7 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
             PreviewViewController.previewViewController?.pop()
         })
 
-        QuickMemory.shared.stack.append("")
+        QuickMemory.shared.pushObject("", inStackForParser: self.parser!)
         
     }
 
@@ -1973,14 +1973,14 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
             PreviewViewController.previewViewController?.popToRoot()
         })
 
-        QuickMemory.shared.stack.append("")
+        QuickMemory.shared.pushObject("", inStackForParser: self.parser!)
         
     }
 
     func executeShowAlert(_ parameters : QuickParameters) {
         
         if parameters.parameters.count <= 2 { // We need at least one button
-            QuickMemory.shared.stack.append("")
+            QuickMemory.shared.pushObject("", inStackForParser: self.parser!)
             return
         }
         
@@ -1988,9 +1988,9 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         var strings : Array<String> = []
         for parameter in parameters.parameters {
             _ = parameter.execute()
-            let value = QuickMemory.shared.stack.popLast()
+            let value = QuickMemory.shared.popObject(inStackForParser: self.parser!)
             if value as? String == nil {
-                QuickMemory.shared.stack.append("")
+                QuickMemory.shared.pushObject("", inStackForParser: self.parser!)
                 return
             }
             strings.insert(value as! String, at: 0)
@@ -2006,33 +2006,33 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
             PreviewViewController.previewViewController.show(alertController, sender: self)
         })
         
-        QuickMemory.shared.stack.append("")
+        QuickMemory.shared.pushObject("", inStackForParser: self.parser!)
         
     }
     
     func executeSaveToFile(_ parameters : QuickParameters) {
         
         if parameters.parameters.count != 2 {
-            QuickMemory.shared.stack.append(false)
+            QuickMemory.shared.pushObject(false, inStackForParser: self.parser!)
             return
         }
         
         // Two parameters, both should be strings
         var parameter = parameters.parameters[0]
         parameter.execute()
-        let dataValue = QuickMemory.shared.stack.popLast()
+        let dataValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         guard dataValue as? String != nil else {
-            QuickMemory.shared.stack.append(false)
+            QuickMemory.shared.pushObject(false, inStackForParser: self.parser!)
             return
         }
         
         parameter = parameters.parameters[1]
         parameter.execute()
-        let pathValue = QuickMemory.shared.stack.popLast()
+        let pathValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         guard pathValue as? String != nil else {
-            QuickMemory.shared.stack.append(false)
+            QuickMemory.shared.pushObject(false, inStackForParser: self.parser!)
             return
         }
         
@@ -2044,28 +2044,28 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         do {
             try (dataValue as! NSString).write(to: documentPath, atomically: true, encoding: String.Encoding.utf8.rawValue)
         } catch {
-            QuickMemory.shared.stack.append(false)
+            QuickMemory.shared.pushObject(false, inStackForParser: self.parser!)
             return
         }
         
-        QuickMemory.shared.stack.append(true)
+        QuickMemory.shared.pushObject(true, inStackForParser: self.parser!)
         
     }
 
     func executeReadFromFile(_ parameters : QuickParameters) {
         
         if parameters.parameters.count != 1 {
-            QuickMemory.shared.stack.append("")
+            QuickMemory.shared.pushObject("", inStackForParser: self.parser!)
             return
         }
         
         // We just need the nane if the file
         var parameter = parameters.parameters[0]
         parameter.execute()
-        let pathValue = QuickMemory.shared.stack.popLast()
+        let pathValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         guard pathValue as? String != nil else {
-            QuickMemory.shared.stack.append("")
+            QuickMemory.shared.pushObject("", inStackForParser: self.parser!)
             return
         }
         
@@ -2075,9 +2075,9 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         
         do {
             let string = try NSString(contentsOf: documentPath, encoding: String.Encoding.utf8.rawValue)
-            QuickMemory.shared.stack.append(string)
+            QuickMemory.shared.pushObject(string, inStackForParser: self.parser!)
         } catch {
-            QuickMemory.shared.stack.append("")
+            QuickMemory.shared.pushObject("", inStackForParser: self.parser!)
             return
         }
         
@@ -2124,7 +2124,7 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
     }
 
     func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-        QuickMemory.shared.stack.append(UIImage(named: "blank"))
+        QuickMemory.shared.pushObject(UIImage(named: "blank") as Any, inStackForParser: self.parser!)
         cameraSemaphore.signal()
         picker.presentingViewController?.dismiss(animated: true, completion: {
             // https://stackoverflow.com/questions/32455429/wrong-screen-size-after-dismissing-uiimagepickercontroller
@@ -2138,7 +2138,7 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
     }
 
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
-        QuickMemory.shared.stack.append(info[UIImagePickerControllerOriginalImage])
+        QuickMemory.shared.pushObject(info[UIImagePickerControllerOriginalImage], inStackForParser: self.parser!)
         cameraSemaphore.signal()
         picker.presentingViewController?.dismiss(animated: true, completion: {
             // https://stackoverflow.com/questions/32455429/wrong-screen-size-after-dismissing-uiimagepickercontroller
@@ -2188,7 +2188,8 @@ class QuickProperty : QuickObject {
             }
             propertyString.append(obj.content)
         }
-        QuickMemory.shared.stack.append(propertyString)
+
+        QuickMemory.shared.pushObject(propertyString, inStackForParser: self.parser!)
         
         return nil
     }
@@ -2279,12 +2280,12 @@ class QuickAssignment : QuickObject {
 
     override func execute() -> Any? {
         leftSide?.execute()
-        let leftSideResult = QuickMemory.shared.stack.popLast()
+        let leftSideResult = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         rightSide?.execute()
-        var rightSideResult = QuickMemory.shared.stack.popLast()
+        var rightSideResult = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         if castingType == "Integer" {
-            if !(rightSideResult is Integer) {
+            if !(rightSideResult is Int) {
                 rightSideResult = 0
             }
         } else if castingType == "Float" {
@@ -2309,7 +2310,7 @@ class QuickAssignment : QuickObject {
             }
         } else if castingType == "Image" {
             if !(rightSideResult is UIImage) {
-                rightSideResult = UIImage(named: "blank")
+                rightSideResult = UIImage(named: "blank") as Any
             }
         }
 
@@ -2350,7 +2351,7 @@ class QuickAssignment : QuickObject {
             
             }
             // Assign it in the heap, regardless of if it's an external symbol
-            QuickMemory.shared.setObject(rightSideResult!, forKey: (leftSideResult as! String), inHeapForParser: self.parser!)
+            QuickMemory.shared.setObject(rightSideResult, forKey: (leftSideResult as! String), inHeapForParser: self.parser!)
         } else {
             QuickError.shared.setErrorMessage("Bad value from stack during assignment", withLine: -2)
         }
@@ -2396,13 +2397,14 @@ class QuickArray : QuickObject {
         parameters?.execute()
         
         if subscriptValue != nil {
-            let parametersArray = QuickMemory.shared.stack.popLast() as! Array<Any>
+            let parametersArray = QuickMemory.shared.popObject(inStackForParser: self.parser!) as! Array<Any>
             subscriptValue?.execute()
-            let subscriptInt = QuickMemory.shared.stack.popLast() as! Int
+            let subscriptInt = QuickMemory.shared.popObject(inStackForParser: self.parser!) as! Int
             if subscriptInt >= parametersArray.count {
                 QuickError.shared.setErrorMessage("Array index is out of bounds", withLine: -2)
             }
-            QuickMemory.shared.stack.append(parametersArray[subscriptInt])
+
+            QuickMemory.shared.pushObject(parametersArray[subscriptInt], inStackForParser: self.parser!)
         }
         
         return nil
@@ -2433,11 +2435,11 @@ class QuickKeyValuePair : QuickObject {
     override func execute() -> Any? {
         var computed : Dictionary<String, Any> = [:]
         key?.execute()
-        let keyValue = QuickMemory.shared.stack.popLast()!
+        let keyValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         value?.execute()
-        let valueValue = QuickMemory.shared.stack.popLast()!
+        let valueValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         computed["\(keyValue)"] = valueValue
-        QuickMemory.shared.stack.append(computed)
+        QuickMemory.shared.pushObject(computed, inStackForParser: self.parser!)
         return nil
     }
     
@@ -2486,18 +2488,19 @@ class QuickDictionary : QuickObject {
         var computed : Dictionary<String, Any> = [:]
         for pair in content {
             pair.execute()
-            let pairResult = QuickMemory.shared.stack.popLast() as! Dictionary<String, Any>
+            let pairResult = QuickMemory.shared.popObject(inStackForParser: self.parser!) as! Dictionary<String, Any>
             computed.add(dictionary: pairResult)
         }
-        QuickMemory.shared.stack.append(computed)
+
+        QuickMemory.shared.pushObject(computed, inStackForParser: self.parser!)
         
         if subscriptValue != nil {
             subscriptValue?.execute()
-            let subscriptString = QuickMemory.shared.stack.popLast() as! String
+            let subscriptString = QuickMemory.shared.popObject(inStackForParser: self.parser!) as! String
             if computed[subscriptString] == nil {
-                QuickMemory.shared.stack.append("NULL")
+                QuickMemory.shared.pushObject("", inStackForParser: self.parser!)
             } else {
-                QuickMemory.shared.stack.append(computed[subscriptString]!)
+                QuickMemory.shared.pushObject(computed[subscriptString]!, inStackForParser: self.parser!)
             }
         }
         
@@ -2538,7 +2541,7 @@ class QuickIfStatement : QuickObject {
     override func execute() -> Any? {
 
         expression?.execute()
-        let expressionResult = QuickMemory.shared.stack.popLast() as! Bool
+        let expressionResult = QuickMemory.shared.popObject(inStackForParser: self.parser!) as! Bool
         if expressionResult {
             executionBlock?.execute()
         } else {
@@ -2588,7 +2591,7 @@ class QuickForLoop : QuickObject {
     override func execute() -> Any? {
 
         array?.execute()
-        let collection = QuickMemory.shared.stack.popLast() as! Array<Any>
+        let collection = QuickMemory.shared.popObject(inStackForParser: self.parser!) as! Array<Any>
         for obj in collection {
             
             var cleanObject = obj
@@ -2656,11 +2659,11 @@ class QuickWhileLoop : QuickObject {
     override func execute() -> Any? {
 
         expression?.execute()
-        var expressionResult = QuickMemory.shared.stack.popLast() as! Bool
+        var expressionResult = QuickMemory.shared.popObject(inStackForParser: self.parser!) as! Bool
         while expressionResult {
             executionBlock?.execute()
             expression?.execute()
-            expressionResult = QuickMemory.shared.stack.popLast() as! Bool
+            expressionResult = QuickMemory.shared.popObject(inStackForParser: self.parser!) as! Bool
         }
         
         return nil
@@ -2687,7 +2690,7 @@ class QuickReturnStatement : QuickObject {
     
     override func execute() -> Any? {
         _ = content?.execute()
-        let returnValue = QuickMemory.shared.stack.popLast()
+        let returnValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         return returnValue
     }
     
@@ -2710,7 +2713,7 @@ class QuickColor : QuickObject {
     }
     
     override func execute() -> Any? {
-        QuickMemory.shared.stack.append(content as Any)
+        QuickMemory.shared.pushObject(content as Any, inStackForParser: self.parser!)
         return nil
     }
 

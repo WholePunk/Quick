@@ -271,6 +271,7 @@ class Parser {
             return true
         } else if currentType() == TokenType.STRING {
             let stringObject = QuickString()
+            stringObject.parser = self
             stringObject.parent = astObject
             stringObject.content = currentToken().tokenString
             astObject.content = stringObject
@@ -387,6 +388,7 @@ class Parser {
         
         if currentType() == TokenType.INTEGER {
             let quickInteger = QuickInteger()
+            quickInteger.parser = self
             quickInteger.content = Int(currentToken().tokenString)!
             quickInteger.parent = astObject
             astObject.content = quickInteger
@@ -420,6 +422,7 @@ class Parser {
             
         } else if currentType() == TokenType.FLOAT {
             let quickFloat = QuickFloat()
+            quickFloat.parser = self
             quickFloat.content = Float(currentToken().tokenString)!
             quickFloat.parent = astObject
             astObject.content = quickFloat
@@ -555,6 +558,7 @@ class Parser {
         } else if currentType() == TokenType.TRUE {
             
             let quickTrue = QuickTrue()
+            quickTrue.parser = self
             
             tokenIndex += 1
             
@@ -597,6 +601,7 @@ class Parser {
                 } else if currentType() == TokenType.TRUE {
                     tokenIndex += 1
                     let trueObj = QuickTrue()
+                    trueObj.parser = self
                     trueObj.parent = logicalObject
                     (logicalObject as? QuickEqual)?.rightSide = trueObj
                     (logicalObject as? QuickNotEqual)?.rightSide = trueObj
@@ -612,6 +617,7 @@ class Parser {
                 } else if currentType() == TokenType.FALSE {
                     tokenIndex += 1
                     let falseObj = QuickFalse()
+                    falseObj.parser = self
                     falseObj.parent = logicalObject
                     (logicalObject as? QuickEqual)?.rightSide = falseObj
                     (logicalObject as? QuickNotEqual)?.rightSide = falseObj
@@ -639,6 +645,7 @@ class Parser {
         } else if currentType() == TokenType.FALSE {
             
             let quickFalse = QuickFalse()
+            quickFalse.parser = self
             
             tokenIndex += 1
             
@@ -681,6 +688,7 @@ class Parser {
                 } else if currentType() == TokenType.TRUE {
                     tokenIndex += 1
                     let trueObj = QuickTrue()
+                    trueObj.parser = self
                     trueObj.parent = logicalObject
                     (logicalObject as? QuickEqual)?.rightSide = trueObj
                     (logicalObject as? QuickNotEqual)?.rightSide = trueObj
@@ -696,6 +704,7 @@ class Parser {
                 } else if currentType() == TokenType.FALSE {
                     tokenIndex += 1
                     let falseObj = QuickFalse()
+                    falseObj.parser = self
                     falseObj.parent = logicalObject
                     (logicalObject as? QuickEqual)?.rightSide = falseObj
                     (logicalObject as? QuickNotEqual)?.rightSide = falseObj
@@ -722,6 +731,7 @@ class Parser {
             
             tokenIndex += 1
             let logicalObject = QuickNot()
+            logicalObject.parser = self
             
             if parseValue() {
                 logicalObject.rightSide = lastCreatedQuickObject as? QuickValue
@@ -731,6 +741,7 @@ class Parser {
                 return true
             } else if currentType() == TokenType.TRUE {
                 logicalObject.rightSide = QuickTrue()
+                (logicalObject.rightSide as? QuickTrue)?.parser = self
                 (logicalObject.rightSide as? QuickTrue)?.parent = logicalObject
                 astObject.content = logicalObject
                 lastCreatedQuickObject = astObject
@@ -738,6 +749,7 @@ class Parser {
                 return true
             } else if currentType() == TokenType.FALSE {
                 logicalObject.rightSide = QuickFalse()
+                (logicalObject.rightSide as? QuickFalse)?.parser = self
                 (logicalObject.rightSide as? QuickFalse)?.parent = logicalObject
                 astObject.content = logicalObject
                 lastCreatedQuickObject = astObject
@@ -791,6 +803,7 @@ class Parser {
                 } else if currentType() == TokenType.TRUE {
                     tokenIndex += 1
                     let trueObj = QuickTrue()
+                    trueObj.parser = self
                     trueObj.parent = logicalObject
                     (logicalObject as? QuickEqual)?.rightSide = trueObj
                     (logicalObject as? QuickNotEqual)?.rightSide = trueObj
@@ -806,6 +819,7 @@ class Parser {
                 } else if currentType() == TokenType.FALSE {
                     tokenIndex += 1
                     let falseObj = QuickFalse()
+                    falseObj.parser = self
                     falseObj.parent = logicalObject
                     (logicalObject as? QuickEqual)?.rightSide = falseObj
                     (logicalObject as? QuickNotEqual)?.rightSide = falseObj
@@ -1344,6 +1358,7 @@ class Parser {
                 let valueValue = lastCreatedQuickObject as! QuickValue
 
                 let astKeyValuePair = QuickKeyValuePair()
+                astKeyValuePair.parser = self
                 astKeyValuePair.parent = astObject
                 astKeyValuePair.key = keyValue
                 astKeyValuePair.value = valueValue
