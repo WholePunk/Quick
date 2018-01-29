@@ -12,6 +12,8 @@
 
 class QuickObject {
     
+    var parser : Parser?
+    
     func printDebugDescription(withLevel: Int) {
         for _ in 0...withLevel {
             Output.shared.string.append("-")
@@ -182,13 +184,13 @@ class QuickIdentifier : QuickObject {
     }
     
     override func execute() -> Any? {
-        let storedValue = QuickMemory.shared.heap[content]
+        let storedValue = QuickMemory.shared.getObjectForKey(content, inHeapForParser: self.parser!)
         if storedValue == nil {
             QuickError.shared.setErrorMessage("Corrupted heap", withLine: -2)
         } else {
             
             if subscriptValue == nil {
-                QuickMemory.shared.stack.append(storedValue!)
+                QuickMemory.shared.stack.append(storedValue)
             } else {
                 if QuickSymbolTable.sharedRoot!.getType(ofIdentifier: content) == "Array" {
                     let parametersArray = storedValue as! Array<Any>
@@ -1743,7 +1745,7 @@ class QuickMethodCall : QuickObject {
         
         // Save to some app-wide context
         let fullKeyName = "app.\(keyParameterValue as! String)"
-        QuickMemory.appWide.heap[fullKeyName] = valueParameterValue
+        QuickMemory.shared.setObject(valueParameterValue as Any, forKey: fullKeyName, inHeapForParser: nil)
         
         QuickMemory.shared.stack.append(true)
         
@@ -1768,14 +1770,9 @@ class QuickMethodCall : QuickObject {
         
         // Grab from the app wide context
         let fullKeyName = "app.\(keyParameterValue as! String)"
-        let value = QuickMemory.appWide.heap[fullKeyName]
+        let value = QuickMemory.shared.getObjectForKey(fullKeyName, inHeapForParser: nil)
         
-        if value != nil {
-            QuickMemory.shared.stack.append(value!)
-        } else {
-            QuickMemory.shared.stack.append("")
-        }
-        
+        QuickMemory.shared.stack.append(value)
         
     }
 
@@ -1803,7 +1800,7 @@ class QuickMethodCall : QuickObject {
         // Save to some app-wide context
         let visibleViewController = RenderCompiler.sharedInstance.appRenderer!.getVisibleViewController()!
         let fullKeyName = "screen.\(visibleViewController.getId()).\(keyParameterValue as! String)"
-        QuickMemory.appWide.heap[fullKeyName] = valueParameterValue
+        QuickMemory.shared.setObject(valueParameterValue as Any, forKey: fullKeyName, inHeapForParser: nil)
 
         QuickMemory.shared.stack.append(true)
         
@@ -1829,13 +1826,9 @@ class QuickMethodCall : QuickObject {
         // Grab from the app wide context
         let visibleViewController = RenderCompiler.sharedInstance.appRenderer!.getVisibleViewController()!
         let fullKeyName = "screen.\(visibleViewController.getId()).\(keyParameterValue as! String)"
-        let value = QuickMemory.appWide.heap[fullKeyName]
+        let value = QuickMemory.shared.getObjectForKey(fullKeyName, inHeapForParser: nil)
         
-        if value != nil {
-            QuickMemory.shared.stack.append(value!)
-        } else {
-            QuickMemory.shared.stack.append("")
-        }
+        QuickMemory.shared.stack.append(value)
 
     }
     
@@ -1940,7 +1933,7 @@ class QuickMethodCall : QuickObject {
                 var contextDictionary = parameterValue2 as! Dictionary<String, Any>
                 for key in contextDictionary.keys {
                     let fullKeyName = "screen.\(rendererForContext!.getId()).\(key)"
-                    QuickMemory.appWide.heap[fullKeyName] = contextDictionary[key]
+                    QuickMemory.shared.setObject(contextDictionary[key] as Any, forKey: fullKeyName, inHeapForParser: nil)
                 }
             }
 
@@ -2205,8 +2198,8 @@ class QuickAssignment : QuickObject {
                 }
             
             }
-            // Not an external symbol, assign it in the heap
-            QuickMemory.shared.heap[leftSideResult as! String] = rightSideResult!
+            // Assign it in the heap, regardless of if it's an external symbol
+            QuickMemory.shared.setObject(rightSideResult!, forKey: (leftSideResult as! String), inHeapForParser: self.parser!)
         } else {
             QuickError.shared.setErrorMessage("Bad value from stack during assignment", withLine: -2)
         }
@@ -2479,7 +2472,7 @@ class QuickForLoop : QuickObject {
                 }
             }
 
-            QuickMemory.shared.heap[identifier!.content] = cleanObject
+            QuickMemory.shared.setObject(cleanObject, forKey: identifier!.content, inHeapForParser: self.parser!)
             executionBlock?.execute()
         }
         

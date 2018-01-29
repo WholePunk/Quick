@@ -12,6 +12,7 @@
 
 class Parser {
     
+    let uuid = UUID().uuidString
     var tokenIndex = 0
     var tokens : Array<Token> = []
     var errorAt = -1
@@ -118,6 +119,7 @@ class Parser {
     func parseMultilineStatement() -> Bool {
         
         let astObject = QuickMultilineStatement()
+        astObject.parser = self
         let backtrackIndex = tokenIndex
         
         if currentType() == TokenType.EOF {
@@ -167,7 +169,8 @@ class Parser {
         
         let backtrackIndex = tokenIndex
         let astObject = QuickStatement()
-        
+        astObject.parser = self
+
         if parseAssignment() {
             if currentType() == TokenType.NEWLINE {
                 astObject.content = lastCreatedQuickObject as? QuickAssignment
@@ -252,7 +255,8 @@ class Parser {
         
         let backtrackIndex = tokenIndex
         let astObject = QuickValue()
-        
+        astObject.parser = self
+
         if parseMathExpression() {
             astObject.content = lastCreatedQuickObject as? QuickMathExpression
             lastCreatedQuickObject = astObject
@@ -296,7 +300,8 @@ class Parser {
         
         let backtrackIndex = tokenIndex
         let astObject = QuickIdentifier()
-        
+        astObject.parser = self
+
         if currentType() == TokenType.IDENTIFIER {
             astObject.content = currentToken().tokenString
             tokenIndex += 1
@@ -336,26 +341,31 @@ class Parser {
         if currentType() == TokenType.PLUS {
             tokenIndex += 1
             let astObject = QuickPlus()
+            astObject.parser = self
             lastCreatedQuickObject = astObject
             return true
         } else if currentType() == TokenType.MINUS {
             tokenIndex += 1
             let astObject = QuickMinus()
+            astObject.parser = self
             lastCreatedQuickObject = astObject
             return true
         } else if currentType() == TokenType.MULTIPLY {
             tokenIndex += 1
             let astObject = QuickMultiply()
+            astObject.parser = self
             lastCreatedQuickObject = astObject
             return true
         } else if currentType() == TokenType.DIVIDE {
             tokenIndex += 1
             let astObject = QuickDivide()
+            astObject.parser = self
             lastCreatedQuickObject = astObject
             return true
         } else if currentType() == TokenType.MOD {
             tokenIndex += 1
             let astObject = QuickMod()
+            astObject.parser = self
             lastCreatedQuickObject = astObject
             return true
         }
@@ -369,6 +379,7 @@ class Parser {
         
         let backtrackIndex = tokenIndex
         let astObject = QuickMathExpression()
+        astObject.parser = self
         
         if currentType() == TokenType.INTEGER {
             let quickInteger = QuickInteger()
@@ -477,41 +488,49 @@ class Parser {
         if currentType() == TokenType.EQUALS {
             tokenIndex += 1
             let astObject = QuickEqual()
+            astObject.parser = self
             lastCreatedQuickObject = astObject
             return true
         } else if currentType() == TokenType.DOESNOTEQUAL {
             tokenIndex += 1
             let astObject = QuickNotEqual()
+            astObject.parser = self
             lastCreatedQuickObject = astObject
             return true
         } else if currentType() == TokenType.LARGERTHAN {
             tokenIndex += 1
             let astObject = QuickGreaterThan()
+            astObject.parser = self
             lastCreatedQuickObject = astObject
             return true
         } else if currentType() == TokenType.SMALLERTHAN {
             tokenIndex += 1
             let astObject = QuickLessThan()
+            astObject.parser = self
             lastCreatedQuickObject = astObject
             return true
         } else if currentType() == TokenType.LARGERTHANOREQUAL {
             tokenIndex += 1
             let astObject = QuickGreaterThanOrEqualTo()
+            astObject.parser = self
             lastCreatedQuickObject = astObject
             return true
         } else if currentType() == TokenType.SMALLERTHANOREQUAL {
             tokenIndex += 1
             let astObject = QuickLessThanOrEqualTo()
+            astObject.parser = self
             lastCreatedQuickObject = astObject
             return true
         } else if currentType() == TokenType.AND {
             tokenIndex += 1
             let astObject = QuickAnd()
+            astObject.parser = self
             lastCreatedQuickObject = astObject
             return true
         } else if currentType() == TokenType.OR {
             tokenIndex += 1
             let astObject = QuickOr()
+            astObject.parser = self
             lastCreatedQuickObject = astObject
             return true
         }
@@ -525,6 +544,7 @@ class Parser {
         
         let backtrackIndex = tokenIndex
         let astObject = QuickLogicalExpression()
+        astObject.parser = self
         
         if currentType() == TokenType.EOF {
             return false
@@ -816,6 +836,7 @@ class Parser {
         
         let backtrackIndex = tokenIndex
         let astObject = QuickForLoop()
+        astObject.parser = self
         
         if currentType() == TokenType.FOR {
             tokenIndex += 1
@@ -913,6 +934,7 @@ class Parser {
         
         let backtrackIndex = tokenIndex
         let astObject = QuickWhileLoop()
+        astObject.parser = self
         
         if currentType() == TokenType.WHILE {
             tokenIndex += 1
@@ -949,6 +971,7 @@ class Parser {
         
         let backtrackIndex = tokenIndex
         let astObject = QuickIfStatement()
+        astObject.parser = self
         
         if currentType() == TokenType.IF {
             tokenIndex += 1
@@ -1004,6 +1027,7 @@ class Parser {
         
         let backtrackIndex = tokenIndex
         let astObject = QuickAssignment()
+        astObject.parser = self
         
         if !parseProperty() {
             tokenIndex = backtrackIndex
@@ -1101,6 +1125,7 @@ class Parser {
         
         let backtrackIndex = tokenIndex
         let astObject = QuickProperty()
+        astObject.parser = self
         
         if !parseIdentifier() {
             tokenIndex = backtrackIndex
@@ -1119,6 +1144,7 @@ class Parser {
         
         let backtrackIndex = tokenIndex
         let astObject = QuickMethodCall()
+        astObject.parser = self
         
         if currentType() == TokenType.METHODNAME {
             astObject.methodName = currentToken().tokenString
@@ -1166,6 +1192,7 @@ class Parser {
         
         let backtrackIndex = tokenIndex
         let astObject = QuickParameters()
+        astObject.parser = self
         
         if !parseValue() && !parseLogicalExpression() {
             tokenIndex = backtrackIndex
@@ -1194,6 +1221,7 @@ class Parser {
         
         let backtrackIndex = tokenIndex
         let astObject = QuickArray()
+        astObject.parser = self
         
         if currentType() == TokenType.STARTARRAY {
             tokenIndex += 1
@@ -1274,6 +1302,7 @@ class Parser {
         
         let backtrackIndex = tokenIndex
         let astObject = QuickDictionary()
+        astObject.parser = self
         
         if currentType() == TokenType.OPENBRACE {
             tokenIndex += 1
@@ -1363,6 +1392,7 @@ class Parser {
         
         let backtrackIndex = tokenIndex
         let astObject = QuickReturnStatement()
+        astObject.parser = self
         
         if currentType() == TokenType.RETURN {
             tokenIndex += 1
@@ -1385,6 +1415,7 @@ class Parser {
         
         let backtrackIndex = tokenIndex
         let astObject = QuickColor()
+        astObject.parser = self
         
         if currentType() == TokenType.COLOR {
             let colorString = currentToken().tokenString
