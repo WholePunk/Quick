@@ -1314,6 +1314,9 @@ class QuickMethodCall : QuickObject {
         if methodName == "replaceString" {
             executeReplaceString(parameters!)
         }
+        if methodName == "pushScreen" {
+            executePushScreen(parameters!)
+        }
 
         return nil
 
@@ -1843,7 +1846,7 @@ class QuickMethodCall : QuickObject {
             QuickMemory.shared.stack.append("")
             return
         }
-
+        
         parameter = parameters.parameters[1]
         parameter.execute()
         let parameterValue2 = QuickMemory.shared.stack.popLast()
@@ -1852,7 +1855,7 @@ class QuickMethodCall : QuickObject {
             QuickMemory.shared.stack.append("")
             return
         }
-
+        
         parameter = parameters.parameters[2]
         parameter.execute()
         let parameterValue3 = QuickMemory.shared.stack.popLast()
@@ -1861,11 +1864,83 @@ class QuickMethodCall : QuickObject {
             QuickMemory.shared.stack.append("")
             return
         }
-
+        
         let replacedString = (parameterValue1 as! String).replacingOccurrences(of: parameterValue2 as! String, with: parameterValue3 as! String)
         
         QuickMemory.shared.stack.append(replacedString)
         
+    }
+
+    func executePushScreen(_ parameters : QuickParameters) {
+        
+        if parameters.parameters.count != 1 && parameters.parameters.count != 2 {
+            QuickMemory.shared.stack.append("")
+            return
+        }
+        
+        var parameter = parameters.parameters[0]
+        parameter.execute()
+        let parameterValue1 = QuickMemory.shared.stack.popLast()
+        
+        guard parameterValue1 as? String != nil else {
+            QuickMemory.shared.stack.append("")
+            return
+        }
+        
+        let screenIdentifier = parameterValue1 as! String
+        let navigationController = RenderCompiler.sharedInstance.appRenderer?.getVisibleViewController()?.getActiveNavigationViewController()
+        var targetModel : ViewControllerModel?
+        for child in navigationController!.isa.children {
+            if child is ViewControllerModel {
+                if (child as! ViewControllerModel).getProperty(propertyIdentifier: PropertyValues.identifier)?.getValue() as? String == screenIdentifier {
+                    targetModel = child as! ViewControllerModel
+                }
+            }
+        }
+        
+        var rendererForContext : ViewControllerRenderer?
+        
+        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now(), execute: { // Some items (eg. MKMapView) need to be rendered on the main thread
+        
+            if targetModel == nil {
+                targetModel = ModelObjectFactory.createViewControllerModel(withParent: navigationController!.isa)
+                let identifierProp = targetModel?.getProperty(propertyIdentifier: PropertyValues.identifier)
+                identifierProp?.set(value: screenIdentifier)
+                targetModel?.setProperty(updatedProperty: identifierProp!)
+            }
+
+            guard navigationController != nil else {
+                print("Error: attempt to push failed as visibleViewController is nil")
+                return
+            }
+            
+            let renderer = ViewControllerRenderer(isa: targetModel!, parent: navigationController)
+            renderer.render()
+            rendererForContext = renderer
+            
+            if parameters.parameters.count == 2 {
+                let parameter2 = parameters.parameters[1]
+                _ = parameter2.execute()
+                let parameterValue2 = QuickMemory.shared.stack.popLast()
+                
+                guard parameterValue2 as? Dictionary<String, Any> != nil else {
+                    QuickMemory.shared.stack.append("")
+                    return
+                }
+                
+                var contextDictionary = parameterValue2 as! Dictionary<String, Any>
+                for key in contextDictionary.keys {
+                    let fullKeyName = "screen.\(rendererForContext!.getId()).\(key)"
+                    QuickMemory.appWide.heap[fullKeyName] = contextDictionary[key]
+                }
+            }
+
+            // Push the new ViewController
+            PreviewViewController.previewViewController?.push(viewControllerRenderer : renderer)
+        })
+        
+        QuickMemory.shared.stack.append("")
+
     }
 
 }
