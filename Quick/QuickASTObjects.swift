@@ -1317,6 +1317,12 @@ class QuickMethodCall : QuickObject {
         if methodName == "pushScreen" {
             executePushScreen(parameters!)
         }
+        if methodName == "popScreen" {
+            executePopScreen()
+        }
+        if methodName == "popToRootScreen" {
+            executePopToRootScreen()
+        }
 
         return nil
 
@@ -1942,6 +1948,27 @@ class QuickMethodCall : QuickObject {
         QuickMemory.shared.stack.append("")
 
     }
+    
+    func executePopScreen() {
+        
+        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now(), execute: { // Some items (eg. MKMapView) need to be rendered on the main thread
+            PreviewViewController.previewViewController?.pop()
+        })
+
+        QuickMemory.shared.stack.append("")
+        
+    }
+
+    func executePopToRootScreen() {
+        
+        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now(), execute: { // Some items (eg. MKMapView) need to be rendered on the main thread
+            PreviewViewController.previewViewController?.popToRoot()
+        })
+
+        QuickMemory.shared.stack.append("")
+        
+    }
+
 
 }
 
