@@ -1266,6 +1266,87 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         symbolTable.expectSymbol(methodName)
         parameters?.checkSymbols(symbolTable: symbolTable)
     }
+    
+    override func getType() -> String {
+        if methodName == "print" {
+            return "String"
+        }
+        if methodName == "getJSONArray" {
+            return "Array"
+        }
+        if methodName == "getJSONDictionary" {
+            return "Dictionary"
+        }
+        if methodName == "getImage" {
+            return "Image"
+        }
+        if methodName == "encodeBase64" {
+            return "String"
+        }
+        if methodName == "countArray" {
+            return "Integer"
+        }
+        if methodName == "countDictionary" {
+            return "Integer"
+        }
+        if methodName == "getDictionaryKeys" {
+            return "Array"
+        }
+        if methodName == "addItemToDictionary" {
+            return "Dictionary"
+        }
+        if methodName == "removeItemFromDictionary" {
+            return "Dictionary"
+        }
+        if methodName == "addItemToArray" {
+            return "Array"
+        }
+        if methodName == "removeItemFromArray" {
+            return "Array"
+        }
+        if methodName == "setAppVariable" {
+            return "Boolean"
+        }
+        if methodName == "getAppVariable" {
+            return ""
+        }
+        if methodName == "setScreenVariable" {
+            return "Boolean"
+        }
+        if methodName == "getScreenVariable" {
+            return ""
+        }
+        if methodName == "replaceString" {
+            return "String"
+        }
+        if methodName == "pushScreen" {
+            return "String"
+        }
+        if methodName == "popScreen" {
+            return "String"
+        }
+        if methodName == "popToRootScreen" {
+            return "String"
+        }
+        if methodName == "showAlert" {
+            return "String"
+        }
+        if methodName == "saveToFile" {
+            return "Boolean"
+        }
+        if methodName == "readFromFile" {
+            return "String"
+        }
+        if methodName == "getImageFromCamera" {
+            return "Image"
+        }
+        if methodName == "getImageFromLibrary" {
+            return "Image"
+        }
+        
+        return ""
+
+    }
 
     override func execute() -> Any? {
         if methodName == "print" {
