@@ -433,6 +433,9 @@ class QuickPlus : QuickObject {
             }
             let computed = (leftSideValue as! Float) + (rightSideValue as! Float)
             QuickMemory.shared.pushObject(computed, inStackForParser: self.parser!)
+        } else if getType() == "String" {
+            let computed = "\(leftSideValue)\(rightSideValue)"
+            QuickMemory.shared.pushObject(computed, inStackForParser: self.parser!)
         } else {
             QuickMemory.shared.pushObject(0, inStackForParser: self.parser!)
         }

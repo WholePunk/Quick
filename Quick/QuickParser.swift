@@ -481,6 +481,38 @@ class Parser {
             } else {
                 return false
             }
+        } else if currentType() == TokenType.STRING {
+            let quickString = QuickString()
+            quickString.parser = self
+            quickString.content = currentToken().tokenString
+            quickString.parent = astObject
+            astObject.content = quickString
+            tokenIndex += 1
+            
+            if !parseMathOperators() {
+                lastCreatedQuickObject = astObject
+                return true
+            }
+            quickString.parent = lastCreatedQuickObject
+            (lastCreatedQuickObject as? QuickPlus)?.leftSide = quickString
+            (lastCreatedQuickObject as? QuickMinus)?.leftSide = quickString
+            (lastCreatedQuickObject as? QuickMultiply)?.leftSide = quickString
+            (lastCreatedQuickObject as? QuickDivide)?.leftSide = quickString
+            (lastCreatedQuickObject as? QuickMod)?.leftSide = quickString
+            
+            if parseMathExpression() {
+                (lastCreatedQuickObject as? QuickMathExpression)?.parent = quickString.parent
+                (quickString.parent as? QuickPlus)?.rightSide = lastCreatedQuickObject
+                (quickString.parent as? QuickMinus)?.rightSide = lastCreatedQuickObject
+                (quickString.parent as? QuickMultiply)?.rightSide = lastCreatedQuickObject
+                (quickString.parent as? QuickDivide)?.rightSide = lastCreatedQuickObject
+                (quickString.parent as? QuickMod)?.rightSide = lastCreatedQuickObject
+                astObject.content = quickString.parent
+                lastCreatedQuickObject = astObject
+                return true
+            } else {
+                return false
+            }
         }
         
         tokenIndex = backtrackIndex
