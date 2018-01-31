@@ -66,7 +66,7 @@ class QuickSymbolTable {
         QuickError.shared.setErrorMessage("Symbol \"\(identifier)\" used before it was declared", withLine: -2)
         
     }
-    
+
     func checkType(_ type : String, ofIdentifier : String) {
         
         if self.symbols[ofIdentifier] != nil {
@@ -89,7 +89,28 @@ class QuickSymbolTable {
         }
         
     }
+    
+    func checkArguments(_ args : QuickParameters?, types: Array<String>, methodName: String) {
         
+        guard args != nil else {
+            QuickError.shared.setErrorMessage("Expected \(types.count) arguments when calling \(methodName), found none", withLine: -2)
+            return
+        }
+        
+        guard args!.parameters.count == types.count else {
+            QuickError.shared.setErrorMessage("Expected \(types.count) arguments when calling \(methodName), found \(args!.parameters.count)", withLine: -2)
+            return
+        }
+        
+        var index = 0
+        for arg in args!.parameters {
+            if arg.getType() != types[index] && types[index] != "Any" {
+                QuickError.shared.setErrorMessage("Expected \(types[index]) in \(methodName) arguments, found \(arg.getType())", withLine: -2)
+            }
+            index = index + 1
+        }
+    }
+
     func getType(ofIdentifier : String) -> String {
         
         if self.symbols[ofIdentifier] != nil {
