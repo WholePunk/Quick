@@ -1327,8 +1327,8 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
             symbolTable.checkArguments(parameters, types: [], methodName: methodName)
         }
         if methodName == "showAlert" {
-            if parameters == nil {
-                QuickError.shared.setErrorMessage("Expected one or more arguments when calling \(methodName), found none", withLine: -2)
+            if parameters == nil || parameters!.parameters.count < 3 {
+                QuickError.shared.setErrorMessage("Expected three or more arguments when calling \(methodName), found none", withLine: -2)
             }
         }
         if methodName == "saveToFile" {
