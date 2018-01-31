@@ -87,7 +87,8 @@ class Parser {
         symbolTable.addSymbol("readFromFile", ofType: "String")
         symbolTable.addSymbol("getImageFromCamera", ofType: "Image")
         symbolTable.addSymbol("getImageFromLibrary", ofType: "Image")
-
+        symbolTable.addSymbol("postJSONToURL", ofType: "Boolean")
+        
         QuickSymbolTable.sharedRoot = symbolTable
         Output.shared.string = ""
         self.tokens = Tokenizer().tokens(fromSource: fromSource)

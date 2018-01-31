@@ -1422,6 +1422,9 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         if methodName == "getImageFromLibrary" {
             return "Image"
         }
+        if methodName == "postJSONToURL" {
+            return "Boolean"
+        }
         
         return ""
 
@@ -1503,7 +1506,10 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         if methodName == "getImageFromLibrary" {
             executeGetImageFromLibrary()
         }
-
+        if methodName == "postJSONToURL" {
+            executePostJSONToURL(parameters!)
+        }
+        
         return nil
 
     }
@@ -2313,6 +2319,48 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
             visibleViewController!.viewController!.tabBarController?.view.layoutIfNeeded()
         })
     }
+    
+    // parameters should contain the JSON String and url String
+    func executePostJSONToURL( _ parameters : QuickParameters) -> Bool {
+        
+        if parameters.parameters.count > 2 || parameters.parameters.count == 0 {
+            return false
+        }
+        
+        let jsonParamter = parameters.parameters[0]
+        _ = jsonParamter.execute()
+        let jsonParamterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
+        
+        guard jsonParamterValue as? String != nil else {
+            return false
+        }
+        
+        let urlParamter = parameters.parameters[1]
+        _ = urlParamter.execute()
+        let urlParamterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
+        
+        guard urlParamterValue as? String != nil else {
+            return false
+        }
+        
+        let url = URL(string: urlParamterValue as! String)
+        guard url != nil else {
+            return false
+        }
+        
+        var data : Data?
+        var response : URLResponse?
+        var error : Error?
+        (data, response, error) = URLSession.shared.synchronousDataTask(with: url!)
+        
+        if error != nil {
+            return false
+        }
+        
+        return true
+    }
+    
+    
 }
 
 class QuickProperty : QuickObject {
