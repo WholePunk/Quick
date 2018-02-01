@@ -1267,6 +1267,85 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
     override func checkSymbols(symbolTable : QuickSymbolTable) {
         symbolTable.expectSymbol(methodName)
         parameters?.checkSymbols(symbolTable: symbolTable)
+        
+        if methodName == "print" {
+            symbolTable.checkArguments(parameters, types: ["Any"], methodName: methodName)
+        }
+        if methodName == "getJSONArray" {
+            symbolTable.checkArguments(parameters, types: ["String"], methodName: methodName)
+        }
+        if methodName == "getJSONDictionary" {
+            symbolTable.checkArguments(parameters, types: ["String"], methodName: methodName)
+        }
+        if methodName == "getImage" {
+            symbolTable.checkArguments(parameters, types: ["String"], methodName: methodName)
+        }
+        if methodName == "encodeBase64" {
+            symbolTable.checkArguments(parameters, types: ["String"], methodName: methodName)
+        }
+        if methodName == "countArray" {
+            symbolTable.checkArguments(parameters, types: ["Array"], methodName: methodName)
+        }
+        if methodName == "countDictionary" {
+            symbolTable.checkArguments(parameters, types: ["Dictionary"], methodName: methodName)
+        }
+        if methodName == "getDictionaryKeys" {
+            symbolTable.checkArguments(parameters, types: ["Dictionary"], methodName: methodName)
+        }
+        if methodName == "addItemToDictionary" {
+            symbolTable.checkArguments(parameters, types: ["Dictionary", "String", "Any"], methodName: methodName)
+        }
+        if methodName == "removeItemFromDictionary" {
+            symbolTable.checkArguments(parameters, types: ["Dictionary", "String"], methodName: methodName)
+        }
+        if methodName == "addItemToArray" {
+            symbolTable.checkArguments(parameters, types: ["Array", "Any"], methodName: methodName)
+        }
+        if methodName == "removeItemFromArray" {
+            symbolTable.checkArguments(parameters, types: ["Array", "Integer"], methodName: methodName)
+        }
+        if methodName == "setAppVariable" {
+            symbolTable.checkArguments(parameters, types: ["String", "Any"], methodName: methodName)
+        }
+        if methodName == "getAppVariable" {
+            symbolTable.checkArguments(parameters, types: ["String"], methodName: methodName)
+        }
+        if methodName == "setScreenVariable" {
+            symbolTable.checkArguments(parameters, types: ["String", "Any"], methodName: methodName)
+        }
+        if methodName == "getScreenVariable" {
+            symbolTable.checkArguments(parameters, types: ["String"], methodName: methodName)
+        }
+        if methodName == "replaceString" {
+            symbolTable.checkArguments(parameters, types: ["String", "String", "String"], methodName: methodName)
+        }
+        if methodName == "pushScreen" {
+            symbolTable.checkArguments(parameters, types: ["String"], methodName: methodName)
+        }
+        if methodName == "popScreen" {
+            symbolTable.checkArguments(parameters, types: [], methodName: methodName)
+        }
+        if methodName == "popToRootScreen" {
+            symbolTable.checkArguments(parameters, types: [], methodName: methodName)
+        }
+        if methodName == "showAlert" {
+            if parameters == nil || parameters!.parameters.count < 3 {
+                QuickError.shared.setErrorMessage("Expected three or more arguments when calling \(methodName), found none", withLine: -2)
+            }
+        }
+        if methodName == "saveToFile" {
+            symbolTable.checkArguments(parameters, types: ["String", "Any"], methodName: methodName)
+        }
+        if methodName == "readFromFile" {
+            symbolTable.checkArguments(parameters, types: ["String"], methodName: methodName)
+        }
+        if methodName == "getImageFromCamera" {
+            symbolTable.checkArguments(parameters, types: [], methodName: methodName)
+        }
+        if methodName == "getImageFromLibrary" {
+            symbolTable.checkArguments(parameters, types: [], methodName: methodName)
+        }
+
     }
     
     override func getType() -> String {

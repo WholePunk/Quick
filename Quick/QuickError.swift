@@ -40,7 +40,7 @@ class QuickError {
         if errorLine == -2 {
             callback?("\(errorMessage)")
         } else {
-            callback?("\(errorMessage) on line \(errorLine)")
+            callback?("\(errorMessage) on line \(errorLine + 1)")
         }
         
     }
