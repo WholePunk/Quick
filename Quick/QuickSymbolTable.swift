@@ -131,5 +131,9 @@ class QuickSymbolTable {
         child?.printSymbolTable()
         
     }
+    
+//    func localSymbols() -> Array<String> {
+//        
+//    }
 
 }

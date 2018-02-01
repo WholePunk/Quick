@@ -14,6 +14,7 @@ class QuickMemory {
     
     var stacks : Dictionary<String, Array<Any>> = [:]
     var heaps : Dictionary<String, Dictionary<String, Any>> = [:]
+    var archivedHeap : Dictionary<Int, Dictionary<String, Any>> = [:]
 
     func reset() {
 //        QuickMemory.shared = QuickMemory()
@@ -98,13 +99,39 @@ class QuickMemory {
         return returnValue!
     }
     
-//    func heapForParser(_ parser: Parser) -> Dictionary<String, Any> {
-//        if heaps[parser.uuid] == nil {
-//            heaps[parser.uuid] = Dictionary<String, Any>()
-//        }
-//
-//        return heaps[parser.uuid]
-//    }
+    func archiveHeapForParser(_ parser: Parser, onLine: Int) {
+        
+        let parserKey = parser.uuid
+        
+        guard heaps[parserKey] != nil else {
+            return
+        }
+        
+        let heapToArchive = heaps[parserKey]
+        archivedHeap[onLine] = heapToArchive
+
+    }
     
+    func archivedHeap(onLine: Int) -> Dictionary<String, Any> {
+        
+        var heapToReturn : Dictionary<String, Any>?
+        var testingLine = onLine
+        
+        while heapToReturn == nil && testingLine >= 0 {
+            if archivedHeap[testingLine] != nil {
+                heapToReturn = archivedHeap[testingLine]!
+            }
+            testingLine -= 1
+        }
+        
+        if heapToReturn == nil {
+            return [:]
+        }
+        return heapToReturn!
+    }
+    
+    func resetHeapArchive() {
+        archivedHeap = [:]
+    }
     
 }
