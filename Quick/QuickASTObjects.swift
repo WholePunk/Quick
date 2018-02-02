@@ -1373,6 +1373,12 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         if methodName == "getImageFromLibrary" {
             symbolTable.checkArguments(parameters, types: [], methodName: methodName)
         }
+        if methodName == "postJSONToURL" {
+            symbolTable.checkArguments(parameters, types: ["Any", "String"], methodName: methodName)
+        }
+        if methodName == "postFormToURL" {
+            symbolTable.checkArguments(parameters, types: ["Dictionary", "String"], methodName: methodName)
+        }
 
     }
     
@@ -1543,7 +1549,7 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
             executePostJSONToURL(parameters!)
         }
         if methodName == "postFormToURL" {
-            
+            executePostFormToURL(parameters!)
         }
         
         QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
@@ -2359,10 +2365,11 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
     }
     
     // parameters should contain the JSON and url
-    func executePostJSONToURL( _ parameters : QuickParameters) -> Bool {
+    func executePostJSONToURL( _ parameters : QuickParameters) {
         
         if parameters.parameters.count > 2 || parameters.parameters.count == 0 {
-            return false
+            QuickMemory.shared.pushObject(false, inStackForParser: self.parser!)
+            return
         }
         
         let jsonParamter = parameters.parameters[0]
@@ -2370,7 +2377,8 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         let jsonParamterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         guard jsonParamterValue as? Dictionary<String, Any> != nil else {
-            return false
+            QuickMemory.shared.pushObject(false, inStackForParser: self.parser!)
+            return
         }
         
         let urlParamter = parameters.parameters[1]
@@ -2378,32 +2386,38 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         let urlParamterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         guard urlParamterValue as? String != nil else {
-            return false
+            QuickMemory.shared.pushObject(false, inStackForParser: self.parser!)
+            return
         }
         
         let url = URL(string: urlParamterValue as! String)
         guard url != nil else {
-            return false
+            QuickMemory.shared.pushObject(false, inStackForParser: self.parser!)
+            return
         }
         
-        Alamofire.request(url!, method: .post, parameters: jsonParamterValue as? Dictionary<String, Any>, encoding: JSONEncoding.default, headers: nil)
+        Alamofire.request(url!, method: .post, parameters: jsonParamterValue as? Dictionary<String, Any>, encoding: JSONEncoding.default, headers: nil).responseString { (response) in
+                print(response)
+                QuickMemory.shared.pushObject(true, inStackForParser: self.parser!)
+        }
         
-        return true
     }
     
     // parameters should contain a Dictionary of form data and url String
-    func executePostFormToURL( _ parameters : QuickParameters) -> Bool {
+    func executePostFormToURL( _ parameters : QuickParameters) {
         
         if parameters.parameters.count > 2 || parameters.parameters.count == 0 {
-            return false
+            QuickMemory.shared.pushObject(false, inStackForParser: self.parser!)
+            return
         }
         
         let formParamter = parameters.parameters[0]
         _ = formParamter.execute()
         let formParamterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
-        guard formParamterValue as? Array<QuickKeyValuePair> != nil else {
-            return false
+        guard formParamterValue as? Dictionary<String, Any> != nil else {
+            QuickMemory.shared.pushObject(false, inStackForParser: self.parser!)
+            return
         }
         
         let urlParamter = parameters.parameters[1]
@@ -2411,75 +2425,77 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         let urlParamterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         guard urlParamterValue as? String != nil else {
-            return false
+            QuickMemory.shared.pushObject(false, inStackForParser: self.parser!)
+            return
         }
         
         Alamofire.upload(
             multipartFormData: { multipartFormData in
-                for keyValuePair in formParamterValue as! Array<QuickKeyValuePair> {
-                    _ = keyValuePair.execute()
-                    let keyValueDict = QuickMemory.shared.popObject(inStackForParser: self.parser!) as! Dictionary<String, Any>
+                for key in (formParamterValue as! Dictionary<String, Any>).keys {
                     
-                    for (key, value) in keyValueDict {
-                        // From https://stackoverflow.com/questions/28680589/how-to-convert-an-int-into-nsdata-in-swift
-                        if value is Int {
-                            var intValue = (value as! Int).bigEndian
-                            let data = NSData(bytes: &intValue, length: MemoryLayout<Int>.size)
-                            
-                            multipartFormData.append(data as Data, withName: key)
-                        }
-                        if value is Float {
-                            var floatValue = value as! Float
-                            let data = NSData(bytes: &floatValue, length: MemoryLayout<Float>.size)
-                            
-                            multipartFormData.append(data as Data, withName: key)
-                        }
-                        if value is String {
-                            let data = (value as! String).data(using: String.Encoding.utf8)!
+                    let value = (formParamterValue as! Dictionary<String, Any>)[key]
+                    
+                    guard value != nil else {
+                        continue
+                    }
+                    
+                    // From https://stackoverflow.com/questions/28680589/how-to-convert-an-int-into-nsdata-in-swift
+                    if value is Int {
+                        var intValue = (value as! Int).bigEndian
+                        let data = NSData(bytes: &intValue, length: MemoryLayout<Int>.size)
+                        
+                        multipartFormData.append(data as Data, withName: key)
+                    }
+                    if value is Float {
+                        var floatValue = value as! Float
+                        let data = NSData(bytes: &floatValue, length: MemoryLayout<Float>.size)
+                        
+                        multipartFormData.append(data as Data, withName: key)
+                    }
+                    if value is String {
+                        let data = (value as! String).data(using: String.Encoding.utf8)!
+                        multipartFormData.append(data, withName: key)
+                    }
+                    if value is Bool {
+                        var boolValue = value as! Bool
+                        let data = NSData(bytes: &boolValue, length: MemoryLayout<Bool>.size)
+                        
+                        multipartFormData.append(data as Data, withName: key)
+                    }
+                    if value is Dictionary<String, Any> ||
+                        value is Array<Any> {
+                        do {
+                            let data = try JSONSerialization.data(withJSONObject: value!, options: .sortedKeys)
                             multipartFormData.append(data, withName: key)
+                        } catch {
+                            continue
                         }
-                        if value is Bool {
-                            var boolValue = value as! Bool
-                            let data = NSData(bytes: &boolValue, length: MemoryLayout<Bool>.size)
-                            
-                            multipartFormData.append(data as Data, withName: key)
-                        }
-                        if value is Dictionary<String, Any> ||
-                            value is Array<Any> {
-                            do {
-                                let data = try JSONSerialization.data(withJSONObject: value, options: .sortedKeys)
-                                multipartFormData.append(data, withName: key)
-                            } catch {
-                                return
-                            }
-                        }
-                        if value is UIImage {
-                            let data = UIImagePNGRepresentation(value as! UIImage)
-                            guard data != nil else {
-                                return
-                            }
-                            
-                            multipartFormData.append(data!, withName: key)
+                    }
+                    if value is UIImage {
+                        let data = UIImagePNGRepresentation(value as! UIImage)
+                        guard data != nil else {
+                             continue
                         }
                         
+                        multipartFormData.append(data!, withName: key)
                     }
                 }
-        },
+            },
             to: urlParamterValue as! String,
             encodingCompletion: { encodingResult in
                 switch encodingResult {
                 case .success(let upload, _, _):
-                    upload.responseJSON { response in
+                    upload.responseString { response in
                         print(response)
+                        QuickMemory.shared.pushObject(true, inStackForParser: self.parser!)
                     }
                     
                 case .failure(let encodingError):
                     print(encodingError)
+                    QuickMemory.shared.pushObject(false, inStackForParser: self.parser!)
                 }
             }
         )
-        
-        return true
     }
 }
 
