@@ -1590,9 +1590,9 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
             return
         }
         
-        let url = URL(string: parameterValue as! String)
+        let url = URL(string: (parameterValue as! String))
         guard url != nil else {
-            QuickMemory.shared.pushObject([:], inStackForParser: self.parser!)
+            QuickMemory.shared.pushObject(["error":"Invalid url to getJSONDictionary call"], inStackForParser: self.parser!)
             return
         }
         
