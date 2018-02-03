@@ -10,6 +10,8 @@
 /* Abstract Syntax Tree */
 /************************/
 
+import Alamofire
+
 class QuickObject : NSObject {
     
     var parser : Parser?
@@ -1272,13 +1274,13 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
             symbolTable.checkArguments(parameters, types: ["Any"], methodName: methodName)
         }
         if methodName == "getJSONArray" {
-            symbolTable.checkArguments(parameters, types: ["String"], methodName: methodName)
+            symbolTable.checkArguments(parameters, types: ["String", "Dictionary"], methodName: methodName)
         }
         if methodName == "getJSONDictionary" {
-            symbolTable.checkArguments(parameters, types: ["String"], methodName: methodName)
+            symbolTable.checkArguments(parameters, types: ["String", "Dictionary"], methodName: methodName)
         }
         if methodName == "getImage" {
-            symbolTable.checkArguments(parameters, types: ["String"], methodName: methodName)
+            symbolTable.checkArguments(parameters, types: ["String", "Dictionary"], methodName: methodName)
         }
         if methodName == "encodeBase64" {
             symbolTable.checkArguments(parameters, types: ["String"], methodName: methodName)
@@ -1344,6 +1346,19 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         }
         if methodName == "getImageFromLibrary" {
             symbolTable.checkArguments(parameters, types: [], methodName: methodName)
+        }
+        if methodName == "postJSONToURL" {
+            if parameters == nil || parameters!.parameters.count < 2 {
+                QuickError.shared.setErrorMessage("Expected two or more arguments when calling \(methodName)", withLine: -2)
+            }
+        }
+        if methodName == "postFormToURL" {
+            if parameters == nil || parameters!.parameters.count < 2 {
+                QuickError.shared.setErrorMessage("Expected two or more arguments when calling \(methodName)", withLine: -2)
+            }
+        }
+        if methodName == "signInViaOAuth" {
+            symbolTable.checkArguments(parameters, types: ["Dictionary"], methodName: methodName)
         }
 
     }
@@ -1425,6 +1440,12 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
             return "Image"
         }
         if methodName == "postJSONToURL" {
+            return "Boolean"
+        }
+        if methodName == "postFormToURL" {
+            return "Boolean"
+        }
+        if methodName == "signInViaOAuth" {
             return "Boolean"
         }
         
@@ -1511,6 +1532,14 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         if methodName == "postJSONToURL" {
             executePostJSONToURL(parameters!)
         }
+        if methodName == "postFormToURL" {
+            executePostFormToURL(parameters!)
+        }
+        if methodName == "signInViaOAuth" {
+            executeSignInViaOAuth(parameters!)
+        }
+        
+        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
 
         return nil
 
@@ -1528,12 +1557,11 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
 
     func executeGetJSONArrayWithParameters(_ parameters : QuickParameters) {
         
-        if parameters.parameters.count > 1 || parameters.parameters.count == 0 {
+        if parameters.parameters.count > 2 || parameters.parameters.count == 0 {
             QuickMemory.shared.pushObject([], inStackForParser: self.parser!)
             return
         }
         
-        // We only have a single parameter
         let parameter = parameters.parameters[0]
         parameter.execute()
         let parameterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
@@ -1549,10 +1577,25 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
             return
         }
         
+        var headersDictionary : Dictionary<String, String>? = nil
+        
+        if parameters.parameters.count > 1 {
+            let headersParameter = parameters.parameters[1]
+            headersParameter.execute()
+            let headersParameterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
+            
+            guard headersParameterValue as? Dictionary<String, String> != nil else {
+                QuickMemory.shared.pushObject([:], inStackForParser: self.parser!)
+                return
+            }
+            
+            headersDictionary = headersParameterValue as? Dictionary<String, String>
+        }
+        
         var data : Data?
         var response : URLResponse?
         var error : Error?
-        (data, response, error) = URLSession.shared.synchronousDataTask(with: url!)
+        (data, response, error) = URLSession.shared.synchronousDataTask(with: url!, andHeaders: headersDictionary)
         
         if error != nil {
             QuickMemory.shared.pushObject([], inStackForParser: self.parser!)
@@ -1575,7 +1618,7 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
     
     func executeGetJSONDictionaryWithParameters(_ parameters : QuickParameters) {
         
-        if parameters.parameters.count > 1 || parameters.parameters.count == 0 {
+        if parameters.parameters.count > 2 || parameters.parameters.count == 0 {
             QuickMemory.shared.pushObject([:], inStackForParser: self.parser!)
             return
         }
@@ -1596,10 +1639,25 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
             return
         }
         
+        var headersDictionary : Dictionary<String, String>? = nil
+        
+        if parameters.parameters.count > 1 {
+            let headersParameter = parameters.parameters[1]
+            headersParameter.execute()
+            let headersParameterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
+            
+            guard headersParameterValue as? Dictionary<String, String> != nil else {
+                QuickMemory.shared.pushObject([:], inStackForParser: self.parser!)
+                return
+            }
+            
+            headersDictionary = headersParameterValue as? Dictionary<String, String>
+        }
+        
         var data : Data?
         var response : URLResponse?
         var error : Error?
-        (data, response, error) = URLSession.shared.synchronousDataTask(with: url!)
+        (data, response, error) = URLSession.shared.synchronousDataTask(with: url!, andHeaders: headersDictionary)
         
         if error != nil {
             QuickMemory.shared.pushObject([:], inStackForParser: self.parser!)
@@ -1622,12 +1680,11 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
 
     func executeGetImageWithParameters(_ parameters : QuickParameters) {
         
-        if parameters.parameters.count > 1 || parameters.parameters.count == 0 {
+        if parameters.parameters.count > 2 || parameters.parameters.count == 0 {
             QuickMemory.shared.pushObject([:], inStackForParser: self.parser!)
             return
         }
         
-        // We only have a single parameter
         let parameter = parameters.parameters[0]
         parameter.execute()
         let parameterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
@@ -1643,10 +1700,25 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
             return
         }
         
+        var headersDictionary : Dictionary<String, String>? = nil
+        
+        if parameters.parameters.count > 1 {
+            let headersParameter = parameters.parameters[1]
+            headersParameter.execute()
+            let headersParameterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
+            
+            guard headersParameterValue as? Dictionary<String, String> != nil else {
+                QuickMemory.shared.pushObject([:], inStackForParser: self.parser!)
+                return
+            }
+            
+            headersDictionary = headersParameterValue as? Dictionary<String, String>
+        }
+        
         var data : Data?
         var response : URLResponse?
         var error : Error?
-        (data, response, error) = URLSession.shared.synchronousDataTask(with: url!)
+        (data, response, error) = URLSession.shared.synchronousDataTask(with: url!, andHeaders: headersDictionary)
         
         if error != nil {
             QuickMemory.shared.pushObject([:], inStackForParser: self.parser!)
@@ -2322,47 +2394,213 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         })
     }
     
-    // parameters should contain the JSON String and url String
-    func executePostJSONToURL( _ parameters : QuickParameters) -> Bool {
+    // parameters include a string representing the url, a dictionary representing form fields,
+    // and an optional dictionary of headers
+    func executePostJSONToURL( _ parameters : QuickParameters) {
         
-        if parameters.parameters.count > 2 || parameters.parameters.count == 0 {
-            return false
+        if parameters.parameters.count != 2 && parameters.parameters.count != 3 {
+            QuickMemory.shared.pushObject(false, inStackForParser: self.parser!)
+            return
         }
         
-        let jsonParamter = parameters.parameters[0]
-        _ = jsonParamter.execute()
-        let jsonParamterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
+        // url to post to
         
-        guard jsonParamterValue as? String != nil else {
-            return false
-        }
-        
-        let urlParamter = parameters.parameters[1]
+        let urlParamter = parameters.parameters[0]
         _ = urlParamter.execute()
         let urlParamterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         guard urlParamterValue as? String != nil else {
-            return false
+            QuickMemory.shared.pushObject(false, inStackForParser: self.parser!)
+            return
         }
         
         let url = URL(string: urlParamterValue as! String)
         guard url != nil else {
-            return false
+            QuickMemory.shared.pushObject(false, inStackForParser: self.parser!)
+            return
         }
         
-        var data : Data?
-        var response : URLResponse?
-        var error : Error?
-        (data, response, error) = URLSession.shared.synchronousDataTask(with: url!)
+        // json to post
         
-        if error != nil {
-            return false
+        let jsonParamter = parameters.parameters[1]
+        _ = jsonParamter.execute()
+        let jsonParamterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
+        
+        var json : Dictionary<String, Any>?
+        
+        if jsonParamterValue is Dictionary<String, Any> {
+            json = jsonParamterValue as? Dictionary<String, Any>
+        } else if jsonParamterValue is Array<Any> {
+            json = Dictionary<String, Any>()
+            var index = 0
+            for value in jsonParamterValue as! Array<Any> {
+                json![String(format: "%i", index)] = value
+                index += 1
+            }
+        } else if jsonParamterValue is String {
+            if let data = (jsonParamterValue as! String).data(using: .utf8) {
+                do {
+                    json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
+                } catch {
+                    print(error.localizedDescription)
+                    QuickMemory.shared.pushObject(false, inStackForParser: self.parser!)
+                    return
+                }
+            }
         }
         
-        return true
+        guard json != nil else {
+            QuickMemory.shared.pushObject(false, inStackForParser: self.parser!)
+            return
+        }
+        
+        // headers
+        
+        var headersDictionary : Dictionary<String, String>?
+        
+        if parameters.parameters.count > 2 {
+            let headersParameter = parameters.parameters[2]
+            headersParameter.execute()
+            let headersParameterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
+            
+            guard headersParameterValue as? Dictionary<String, String> != nil else {
+                QuickMemory.shared.pushObject(false, inStackForParser: self.parser!)
+                return
+            }
+            
+            headersDictionary = headersParameterValue as? Dictionary<String, String>
+        }
+        
+        // Sending request
+        
+        Alamofire.request(url!, method: .post, parameters: json, encoding: JSONEncoding.default, headers: headersDictionary).responseString { (response) in
+                print(response)
+                QuickMemory.shared.pushObject(true, inStackForParser: self.parser!)
+        }
     }
     
+    // parameters include a string representing the url, a dictionary representing form fields,
+    // and an optional dictionary of headers
+    func executePostFormToURL( _ parameters : QuickParameters) {
+        
+        if parameters.parameters.count != 2 && parameters.parameters.count != 3 {
+            QuickMemory.shared.pushObject(false, inStackForParser: self.parser!)
+            return
+        }
+        
+        // url to post to
+        
+        let urlParamter = parameters.parameters[0]
+        _ = urlParamter.execute()
+        let urlParamterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
+        
+        guard urlParamterValue as? String != nil else {
+            QuickMemory.shared.pushObject(false, inStackForParser: self.parser!)
+            return
+        }
+        
+        // form to post
+        
+        let formParamter = parameters.parameters[1]
+        _ = formParamter.execute()
+        let formParamterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
+        
+        guard formParamterValue as? Dictionary<String, Any> != nil else {
+            QuickMemory.shared.pushObject(false, inStackForParser: self.parser!)
+            return
+        }
+        
+        // headers
+        
+        var headersDictionary : Dictionary<String, String>? = nil
+        
+        if parameters.parameters.count > 2 {
+            let headersParameter = parameters.parameters[2]
+            headersParameter.execute()
+            let headersParameterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
+            
+            guard headersParameterValue as? Dictionary<String, String> != nil else {
+                QuickMemory.shared.pushObject(false, inStackForParser: self.parser!)
+                return
+            }
+            
+            headersDictionary = headersParameterValue as? Dictionary<String, String>
+        }
+        
+        // etc
+        
+        Alamofire.upload(
+            multipartFormData: { multipartFormData in
+                for key in (formParamterValue as! Dictionary<String, Any>).keys {
+                    
+                    let value = (formParamterValue as! Dictionary<String, Any>)[key]
+                    
+                    guard value != nil else {
+                        continue
+                    }
+                    
+                    // From https://stackoverflow.com/questions/28680589/how-to-convert-an-int-into-nsdata-in-swift
+                    if value is Int {
+                        var intValue = (value as! Int).bigEndian
+                        let data = NSData(bytes: &intValue, length: MemoryLayout<Int>.size)
+                        
+                        multipartFormData.append(data as Data, withName: key)
+                    }
+                    if value is Float {
+                        var floatValue = value as! Float
+                        let data = NSData(bytes: &floatValue, length: MemoryLayout<Float>.size)
+                        
+                        multipartFormData.append(data as Data, withName: key)
+                    }
+                    if value is String {
+                        let data = (value as! String).data(using: String.Encoding.utf8)!
+                        multipartFormData.append(data, withName: key)
+                    }
+                    if value is Bool {
+                        var boolValue = value as! Bool
+                        let data = NSData(bytes: &boolValue, length: MemoryLayout<Bool>.size)
+                        
+                        multipartFormData.append(data as Data, withName: key)
+                    }
+                    if value is Dictionary<String, Any> ||
+                        value is Array<Any> {
+                        do {
+                            let data = try JSONSerialization.data(withJSONObject: value!, options: .sortedKeys)
+                            multipartFormData.append(data, withName: key)
+                        } catch {
+                            continue
+                        }
+                    }
+                    if value is UIImage {
+                        let data = UIImagePNGRepresentation(value as! UIImage)
+                        guard data != nil else {
+                             continue
+                        }
+                        
+                        multipartFormData.append(data!, withName: key)
+                    }
+                }
+            },
+            to: urlParamterValue as! String,
+            headers: headersDictionary,
+            encodingCompletion: { encodingResult in
+                switch encodingResult {
+                case .success(let upload, _, _):
+                    upload.responseString { response in
+                        print(response)
+                        QuickMemory.shared.pushObject(true, inStackForParser: self.parser!)
+                    }
+                    
+                case .failure(let encodingError):
+                    print(encodingError)
+                    QuickMemory.shared.pushObject(false, inStackForParser: self.parser!)
+                }
+            }
+        )
+    }
     
+    func executeSignInViaOAuth( _ parameters : QuickParameters) {
+    }
 }
 
 class QuickProperty : QuickObject {
@@ -2937,20 +3175,30 @@ class QuickColor : QuickObject {
 
 // Thanks to https://stackoverflow.com/a/34308158/3266978
 extension URLSession {
-    func synchronousDataTask(with url: URL) -> (Data?, URLResponse?, Error?) {
+    func synchronousDataTask(with url: URL, andHeaders headers : Dictionary<String, String>? = nil) -> (Data?, URLResponse?, Error?) {
         var data: Data?
         var response: URLResponse?
         var error: Error?
         
         let semaphore = DispatchSemaphore(value: 0)
         
-        let dataTask = self.dataTask(with: url) {
+        var request = URLRequest(url: url)
+        
+        if headers != nil {
+            for key in headers!.keys {
+                let value = headers![key]!
+                request.addValue(value, forHTTPHeaderField: key)
+            }
+        }
+        
+        let dataTask = self.dataTask(with: request) {
             data = $0
             response = $1
             error = $2
             
             semaphore.signal()
         }
+        
         dataTask.resume()
         
         _ = semaphore.wait(timeout: .distantFuture)
@@ -2958,4 +3206,7 @@ extension URLSession {
         return (data, response, error)
     }
 }
+
+
+
 
