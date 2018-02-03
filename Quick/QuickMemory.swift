@@ -15,6 +15,7 @@ class QuickMemory {
     var stacks : Dictionary<String, Array<Any>> = [:]
     var heaps : Dictionary<String, Dictionary<String, Any>> = [:]
     var archivedHeap : Dictionary<Int, Dictionary<String, Any>> = [:]
+    var accessedSymbols : Dictionary<String, Array<String>> = [:]
 
     func reset() {
 //        QuickMemory.shared = QuickMemory()
@@ -36,6 +37,13 @@ class QuickMemory {
         }
         
         heaps[key]![forKey] = object
+        
+        if accessedSymbols[key] == nil {
+            accessedSymbols[key] = []
+        }
+        if !(accessedSymbols[key]!.contains(forKey)) {
+            accessedSymbols[key]!.append(forKey)
+        }
 
         heapSemaphore.signal()
     }
@@ -54,6 +62,13 @@ class QuickMemory {
         var returnValue = heaps[parserKey]![key]
         if returnValue == nil {
             returnValue = ""
+        }
+        
+        if accessedSymbols[parserKey] == nil {
+            accessedSymbols[parserKey] = []
+        }
+        if !(accessedSymbols[parserKey]!.contains(key)) {
+            accessedSymbols[parserKey]!.append(key)
         }
         
         return returnValue!
@@ -132,6 +147,13 @@ class QuickMemory {
     
     func resetHeapArchive() {
         archivedHeap = [:]
+    }
+    
+    func symbolsAccessedByParser(_ parser: Parser) -> Array<String> {
+        if accessedSymbols[parser.uuid] == nil {
+            accessedSymbols[parser.uuid] = []
+        }
+        return accessedSymbols[parser.uuid]!
     }
     
 }

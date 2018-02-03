@@ -60,8 +60,8 @@ class QuickStatement : QuickObject {
     }
     
     override func execute() -> Any? {
-        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
-        return content?.execute()
+        let returnValue = content?.execute()
+        return returnValue
     }
     
 }
@@ -102,12 +102,10 @@ class QuickMultilineStatement : QuickObject {
             let returnValue = statement.execute()
             if returnValue != nil {
                 QuickSymbolTable.sharedRoot?.popScope()
-                QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
                 return returnValue
             }
         }
         QuickSymbolTable.sharedRoot?.popScope()
-        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
         return nil
     }
     
@@ -131,7 +129,6 @@ class QuickString : QuickObject {
     
     override func execute() -> Any? {
         QuickMemory.shared.pushObject(content, inStackForParser: self.parser!)
-        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
         return nil
     }
 
@@ -222,7 +219,6 @@ class QuickIdentifier : QuickObject {
             }
             
         }
-        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
         return nil
     }
     
@@ -246,7 +242,6 @@ class QuickInteger : QuickObject {
     
     override func execute() -> Any? {
         QuickMemory.shared.pushObject(content, inStackForParser: self.parser!)
-        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
         return nil
     }
     
@@ -270,7 +265,6 @@ class QuickFloat : QuickObject {
 
     override func execute() -> Any? {
         QuickMemory.shared.pushObject(content, inStackForParser: self.parser!)
-        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
         return nil
     }
 
@@ -294,7 +288,6 @@ class QuickTrue : QuickObject {
     
     override func execute() -> Any? {
         QuickMemory.shared.pushObject(content, inStackForParser: self.parser!)
-        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
         return nil
     }
     
@@ -319,7 +312,6 @@ class QuickFalse : QuickObject {
     
     override func execute() -> Any? {
         QuickMemory.shared.pushObject(content, inStackForParser: self.parser!)
-        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
         return nil
     }
 
@@ -351,7 +343,6 @@ class QuickMathExpression : QuickObject {
     
     override func execute() -> Any? {
         content?.execute()
-        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
         return nil
     }
     
@@ -385,7 +376,6 @@ class QuickMathOperator : QuickObject {
     
     override func execute() -> Any? {
         content?.execute()
-        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
         return nil
     }
     
@@ -453,7 +443,6 @@ class QuickPlus : QuickObject {
         } else {
             QuickMemory.shared.pushObject(0, inStackForParser: self.parser!)
         }
-        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
         return nil
     }
 
@@ -512,7 +501,6 @@ class QuickMinus : QuickObject {
         } else {
             QuickMemory.shared.pushObject(0, inStackForParser: self.parser!)
         }
-        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
         return nil
     }
 
@@ -571,7 +559,6 @@ class QuickMultiply : QuickObject {
         } else {
             QuickMemory.shared.pushObject(0, inStackForParser: self.parser!)
         }
-        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
         return nil
     }
 
@@ -630,7 +617,6 @@ class QuickDivide : QuickObject {
         } else {
             QuickMemory.shared.pushObject(0, inStackForParser: self.parser!)
         }
-        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
         return nil
     }
 
@@ -689,7 +675,6 @@ class QuickMod : QuickObject {
         } else {
             QuickMemory.shared.pushObject(0, inStackForParser: self.parser!)
         }
-        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
         return nil
     }
 
@@ -758,7 +743,6 @@ class QuickEqual : QuickObject {
         } else {
             QuickMemory.shared.pushObject(false, inStackForParser: self.parser!)
         }
-        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
         return nil
     }
 
@@ -824,7 +808,6 @@ class QuickNotEqual : QuickObject {
             let result = (leftSideValue as! UIColor) != (rightSideValue as! UIColor)
             QuickMemory.shared.pushObject(result, inStackForParser: self.parser!)
         }
-        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
         return nil
     }
 
@@ -881,7 +864,6 @@ class QuickLessThan : QuickObject {
             let result = (leftSideValue as! Float) < (rightSideValue as! Float)
             QuickMemory.shared.pushObject(result, inStackForParser: self.parser!)
         }
-        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
         return nil
     }
 
@@ -938,7 +920,6 @@ class QuickGreaterThan : QuickObject {
             let result = (leftSideValue as! Float) > (rightSideValue as! Float)
             QuickMemory.shared.pushObject(result, inStackForParser: self.parser!)
         }
-        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
         return nil
     }
 
@@ -995,7 +976,6 @@ class QuickLessThanOrEqualTo : QuickObject {
             let result = (leftSideValue as! Float) <= (rightSideValue as! Float)
             QuickMemory.shared.pushObject(result, inStackForParser: self.parser!)
         }
-        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
         return nil
     }
 
@@ -1052,7 +1032,6 @@ class QuickGreaterThanOrEqualTo : QuickObject {
             let result = (leftSideValue as! Float) >= (rightSideValue as! Float)
             QuickMemory.shared.pushObject(result, inStackForParser: self.parser!)
         }
-        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
         return nil
     }
 
@@ -1108,7 +1087,6 @@ class QuickAnd : QuickObject {
         let rightSideValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         let result = (leftSideValue as! Bool) && (rightSideValue as! Bool)
         QuickMemory.shared.pushObject(result, inStackForParser: self.parser!)
-        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
         return nil
     }
 
@@ -1163,7 +1141,6 @@ class QuickOr : QuickObject {
         let rightSideValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         let result = (leftSideValue as! Bool) || (rightSideValue as! Bool)
         QuickMemory.shared.pushObject(result, inStackForParser: self.parser!)
-        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
         return nil
     }
 
@@ -1209,7 +1186,6 @@ class QuickNot : QuickObject {
         let rightSideValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         let result = !(rightSideValue as! Bool)
         QuickMemory.shared.pushObject(result, inStackForParser: self.parser!)
-        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
         return nil
     }
 
@@ -1238,7 +1214,6 @@ class QuickLogicalExpression : QuickObject {
     
     override func execute() -> Any? {
         content?.execute()
-        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
         return nil
     }
 
@@ -1272,7 +1247,6 @@ class QuickParameters : QuickObject {
             computed.append(QuickMemory.shared.popObject(inStackForParser: self.parser!))
         }
         QuickMemory.shared.pushObject(computed, inStackForParser: self.parser!)
-        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
         return nil
     }
 
@@ -2667,7 +2641,6 @@ class QuickProperty : QuickObject {
         }
 
         QuickMemory.shared.pushObject(propertyString, inStackForParser: self.parser!)
-        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
 
         return nil
     }
@@ -2704,7 +2677,6 @@ class QuickValue : QuickObject {
 
     override func execute() -> Any? {
         content?.execute()
-        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
         return nil
     }
 
@@ -2886,7 +2858,6 @@ class QuickArray : QuickObject {
 
             QuickMemory.shared.pushObject(parametersArray[subscriptInt], inStackForParser: self.parser!)
         }
-        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
 
         return nil
     }
@@ -2921,7 +2892,6 @@ class QuickKeyValuePair : QuickObject {
         let valueValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         computed["\(keyValue)"] = valueValue
         QuickMemory.shared.pushObject(computed, inStackForParser: self.parser!)
-        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
         return nil
     }
     
@@ -2985,7 +2955,6 @@ class QuickDictionary : QuickObject {
                 QuickMemory.shared.pushObject(computed[subscriptString]!, inStackForParser: self.parser!)
             }
         }
-        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
 
         return nil
         
@@ -3030,7 +2999,6 @@ class QuickIfStatement : QuickObject {
         } else {
             elseBlock?.execute()
         }
-        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
 
         return nil
     }
@@ -3114,7 +3082,6 @@ class QuickForLoop : QuickObject {
             QuickMemory.shared.setObject(cleanObject, forKey: identifier!.content, inHeapForParser: self.parser!)
             executionBlock?.execute()
         }
-        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
 
         return nil
 
@@ -3151,7 +3118,6 @@ class QuickWhileLoop : QuickObject {
             expression?.execute()
             expressionResult = QuickMemory.shared.popObject(inStackForParser: self.parser!) as! Bool
         }
-        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
 
         return nil
     }
@@ -3178,7 +3144,6 @@ class QuickReturnStatement : QuickObject {
     override func execute() -> Any? {
         _ = content?.execute()
         let returnValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
-        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
         return returnValue
     }
     
@@ -3202,7 +3167,6 @@ class QuickColor : QuickObject {
     
     override func execute() -> Any? {
         QuickMemory.shared.pushObject(content as Any, inStackForParser: self.parser!)
-        QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
         return nil
     }
 
