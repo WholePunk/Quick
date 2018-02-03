@@ -1277,10 +1277,14 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
             symbolTable.checkArguments(parameters, types: ["String", "Dictionary"], methodName: methodName)
         }
         if methodName == "getJSONDictionary" {
-            symbolTable.checkArguments(parameters, types: ["String", "Dictionary"], methodName: methodName)
+            if parameters == nil || parameters!.parameters.count == 0 || parameters!.parameters.count > 2 {
+                QuickError.shared.setErrorMessage("Expected 1 or 2 parameters when calling \(methodName)", withLine: -2)
+            }
         }
         if methodName == "getImage" {
-            symbolTable.checkArguments(parameters, types: ["String", "Dictionary"], methodName: methodName)
+            if parameters == nil || parameters!.parameters.count == 0 || parameters!.parameters.count > 2 {
+                QuickError.shared.setErrorMessage("Expected 1 or 2 parameters when calling \(methodName)", withLine: -2)
+            }
         }
         if methodName == "encodeBase64" {
             symbolTable.checkArguments(parameters, types: ["String"], methodName: methodName)
@@ -1628,17 +1632,17 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
     func executeGetJSONDictionaryWithParameters(_ parameters : QuickParameters) {
         
         if parameters.parameters.count > 2 || parameters.parameters.count == 0 {
-            QuickMemory.shared.pushObject([:], inStackForParser: self.parser!)
+            QuickMemory.shared.pushObject(["error": "getJSONDictionary expects one or two arguments"], inStackForParser: self.parser!)
             return
         }
         
         // We only have a single parameter
         let parameter = parameters.parameters[0]
-        parameter.execute()
+        _ = parameter.execute()
         let parameterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         guard parameterValue as? String != nil else {
-            QuickMemory.shared.pushObject([:], inStackForParser: self.parser!)
+            QuickMemory.shared.pushObject(["error": "getJSONDictionary expects a string as the first parameter"], inStackForParser: self.parser!)
             return
         }
         
@@ -1652,11 +1656,11 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         
         if parameters.parameters.count > 1 {
             let headersParameter = parameters.parameters[1]
-            headersParameter.execute()
+            _ = headersParameter.execute()
             let headersParameterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
             
             guard headersParameterValue as? Dictionary<String, String> != nil else {
-                QuickMemory.shared.pushObject([:], inStackForParser: self.parser!)
+                QuickMemory.shared.pushObject(["error": "getJSONDictionary expects a dictionary of strings as the first parameter"], inStackForParser: self.parser!)
                 return
             }
             
@@ -1669,7 +1673,7 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         (data, response, error) = URLSession.shared.synchronousDataTask(with: url!, andHeaders: headersDictionary)
         
         if error != nil {
-            QuickMemory.shared.pushObject([:], inStackForParser: self.parser!)
+            QuickMemory.shared.pushObject(["error": error.debugDescription], inStackForParser: self.parser!)
             return
         }
         
@@ -1683,29 +1687,29 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
             print("Error deserializing JSON")
         }
         
-        QuickMemory.shared.pushObject([:], inStackForParser: self.parser!)
+        QuickMemory.shared.pushObject(["error": "No JSON dictionary available"], inStackForParser: self.parser!)
         
     }
 
     func executeGetImageWithParameters(_ parameters : QuickParameters) {
         
         if parameters.parameters.count > 2 || parameters.parameters.count == 0 {
-            QuickMemory.shared.pushObject([:], inStackForParser: self.parser!)
+            QuickMemory.shared.pushObject(["error": "getJSONDictionary expects one or two arguments"], inStackForParser: self.parser!)
             return
         }
-        
+
         let parameter = parameters.parameters[0]
-        parameter.execute()
+        _ = parameter.execute()
         let parameterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         guard parameterValue as? String != nil else {
-            QuickMemory.shared.pushObject([:], inStackForParser: self.parser!)
+            QuickMemory.shared.pushObject(UIImage(named: "blank") as Any, inStackForParser: self.parser!)
             return
         }
         
         let url = URL(string: parameterValue as! String)
         guard url != nil else {
-            QuickMemory.shared.pushObject([:], inStackForParser: self.parser!)
+            QuickMemory.shared.pushObject(UIImage(named: "blank") as Any, inStackForParser: self.parser!)
             return
         }
         
@@ -1713,11 +1717,11 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         
         if parameters.parameters.count > 1 {
             let headersParameter = parameters.parameters[1]
-            headersParameter.execute()
+            _ = headersParameter.execute()
             let headersParameterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
             
             guard headersParameterValue as? Dictionary<String, String> != nil else {
-                QuickMemory.shared.pushObject([:], inStackForParser: self.parser!)
+                QuickMemory.shared.pushObject(UIImage(named: "blank") as Any, inStackForParser: self.parser!)
                 return
             }
             
@@ -1730,7 +1734,7 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         (data, response, error) = URLSession.shared.synchronousDataTask(with: url!, andHeaders: headersDictionary)
         
         if error != nil {
-            QuickMemory.shared.pushObject([:], inStackForParser: self.parser!)
+            QuickMemory.shared.pushObject(UIImage(named: "blank") as Any, inStackForParser: self.parser!)
             return
         }
         
@@ -1740,7 +1744,7 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
             return
         }
         
-        QuickMemory.shared.pushObject(UIImage(named: "blank"), inStackForParser: self.parser!)
+        QuickMemory.shared.pushObject(UIImage(named: "blank") as Any, inStackForParser: self.parser!)
         
     }
 
