@@ -89,6 +89,7 @@ class Parser {
         symbolTable.addSymbol("getImageFromLibrary", ofType: "Image")
         symbolTable.addSymbol("postJSONToURL", ofType: "Boolean")
         symbolTable.addSymbol("postFormToURL", ofType: "Boolean")
+        symbolTable.addSymbol("signInViaOAuth", ofType: "Boolean")
         
         QuickSymbolTable.sharedRoot = symbolTable
         Output.shared.string = ""
