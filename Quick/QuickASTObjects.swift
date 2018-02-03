@@ -2040,7 +2040,7 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         let fullKeyName = "app.\(keyParameterValue as! String)"
         let value = QuickMemory.shared.getObjectForKey(fullKeyName, inHeapForParser: nil)
         
-        QuickMemory.shared.pushObject("", inStackForParser: self.parser!)
+        QuickMemory.shared.pushObject(value, inStackForParser: self.parser!)
         
     }
 
