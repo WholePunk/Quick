@@ -41,6 +41,9 @@ class Parser {
             if currentType() == TokenType.STRING {
                 highlightedSource.setAttributes([NSForegroundColorAttributeName: "C41A16".hexColor], range: NSRange(location: currentToken().startIndex, length: (currentToken().endIndex - currentToken().startIndex)))
             }
+            if currentType() == TokenType.COMMENT {
+                highlightedSource.setAttributes([NSForegroundColorAttributeName: "007400".hexColor], range: NSRange(location: currentToken().startIndex, length: (currentToken().endIndex - currentToken().startIndex)))
+            }
             if currentType() == TokenType.METHODNAME {
                 highlightedSource.setAttributes([NSForegroundColorAttributeName: "2E0D6E".hexColor], range: NSRange(location: currentToken().startIndex, length: (currentToken().endIndex - currentToken().startIndex)))
             }
@@ -102,6 +105,17 @@ class Parser {
         
         highlightSource(fromSource: fromSource)
         
+        var tokensWithoutComments = Array<Token>()
+        for token in self.tokens {
+            if token.tokenType != TokenType.COMMENT {
+                tokensWithoutComments.append(token)
+            }
+        }
+        self.tokens = tokensWithoutComments
+        for token in self.tokens {
+            print("\(token.tokenType) : \(token.tokenString)")
+        }
+
         // We expect that a program should be composed of newlines and statements, until it hits an EOF, then we're done.
         tokenIndex = 0
         while currentType() != TokenType.EOF && errorAt == -1 {

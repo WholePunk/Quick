@@ -70,6 +70,7 @@ enum TokenType {
     case RETURN
     case EOF
     case ERROR
+    case COMMENT
 }
 
 class Tokenizer {
@@ -85,6 +86,7 @@ class Tokenizer {
     var currentTokenString = ""
     var currentToken = TokenType.NONE
     var inString = false
+    var inComment = false
     var inSubscript = true
     var tokens : Array<Token> = []
     var currentLine = 0
@@ -117,6 +119,7 @@ class Tokenizer {
         currentTokenString = ""
         currentToken = TokenType.NONE
         inString = false
+        inComment = false
         
     }
     
@@ -137,7 +140,7 @@ class Tokenizer {
             currentCharacterIndex += 1
             
             let asCharacter = Character(UnicodeScalar(character)!)
-            if (CharacterSet.whitespacesAndNewlines as NSCharacterSet).characterIsMember(character) && !inString {
+            if (CharacterSet.whitespacesAndNewlines as NSCharacterSet).characterIsMember(character) && !inString && !inComment {
                 
                 if currentToken != TokenType.NONE {
                     commitToken()
@@ -515,7 +518,12 @@ class Tokenizer {
                 }
                 
                 if currentToken == TokenType.DIVIDE {
-                    currentToken = TokenType.ERROR // Divide can't have a second character
+                    if asCharacter == "/" {
+                        currentToken = TokenType.COMMENT
+                        inComment = true
+                    } else {
+                        currentToken = TokenType.ERROR // Divide can't have a second character
+                    }
                     continue
                 }
                 
@@ -542,6 +550,15 @@ class Tokenizer {
                     continue
                 }
                 
+                if currentToken == TokenType.COMMENT {
+                    if asCharacter == "\n" {
+                        commitToken()
+                        currentToken = TokenType.NEWLINE
+                        commitToken()
+                    }
+                    continue
+                }
+
                 if currentToken == TokenType.FOR || currentToken == TokenType.IN || currentToken == TokenType.WHILE || currentToken == TokenType.IF || currentToken == TokenType.AND || currentToken == TokenType.OR || currentToken == TokenType.TRUE || currentToken == TokenType.FALSE || currentToken == TokenType.NOT {
                     if (CharacterSet.alphanumerics as NSCharacterSet).characterIsMember(character) {
                         currentToken = TokenType.IDENTIFIER
