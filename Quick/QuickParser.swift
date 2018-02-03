@@ -90,7 +90,8 @@ class Parser {
         symbolTable.addSymbol("postJSONToURL", ofType: "Boolean")
         symbolTable.addSymbol("postFormToURL", ofType: "Boolean")
         symbolTable.addSymbol("signInViaOAuth", ofType: "Boolean")
-        
+        symbolTable.addSymbol("capitalize", ofType: "String")
+
         QuickSymbolTable.sharedRoot = symbolTable
         Output.shared.string = ""
         self.tokens = Tokenizer().tokens(fromSource: fromSource)

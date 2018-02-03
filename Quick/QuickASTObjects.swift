@@ -1360,6 +1360,9 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         if methodName == "signInViaOAuth" {
             symbolTable.checkArguments(parameters, types: ["Dictionary"], methodName: methodName)
         }
+        if methodName == "capitalize" {
+            symbolTable.checkArguments(parameters, types: ["String"], methodName: methodName)
+        }
 
     }
     
@@ -1448,7 +1451,10 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         if methodName == "signInViaOAuth" {
             return "Boolean"
         }
-        
+        if methodName == "capitalize" {
+            return "String"
+        }
+
         return ""
 
     }
@@ -1538,7 +1544,10 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         if methodName == "signInViaOAuth" {
             executeSignInViaOAuth(parameters!)
         }
-        
+        if methodName == "capitalize" {
+            executeCapitalize(parameters!)
+        }
+
         QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
 
         return nil
@@ -2601,6 +2610,29 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
     
     func executeSignInViaOAuth( _ parameters : QuickParameters) {
     }
+    
+    func executeCapitalize(_ parameters : QuickParameters) {
+        
+        if parameters.parameters.count != 1 {
+            QuickMemory.shared.pushObject("", inStackForParser: self.parser!)
+            return
+        }
+        
+        var parameter = parameters.parameters[0]
+        parameter.execute()
+        let stringValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
+        
+        guard stringValue as? String != nil else {
+            QuickMemory.shared.pushObject("", inStackForParser: self.parser!)
+            return
+        }
+        
+        let capitalized = (stringValue as! String).capitalized
+        QuickMemory.shared.pushObject(capitalized, inStackForParser: self.parser!)
+        return
+        
+    }
+
 }
 
 class QuickProperty : QuickObject {
