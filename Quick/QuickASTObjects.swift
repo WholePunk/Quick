@@ -1373,6 +1373,10 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
             symbolTable.checkArguments(parameters, types: ["Array"], methodName: methodName)
         }
 
+        if methodName == "random" {
+            symbolTable.checkArguments(parameters, types: ["Integer", "Integer"], methodName: methodName)
+        }
+
     }
     
     override func getType() -> String {
@@ -1465,6 +1469,9 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         }
         if methodName == "sortArray" {
             return "Array"
+        }
+        if methodName == "random" {
+            return "Integer"
         }
 
         return ""
@@ -1561,6 +1568,9 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         }
         if methodName == "sortArray" {
             executeSortArray(parameters!)
+        }
+        if methodName == "random" {
+            executeRandom(parameters!)
         }
 
         QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
@@ -2655,8 +2665,8 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
             return
         }
         
-        var parameter = parameters.parameters[0]
-        parameter.execute()
+        let parameter = parameters.parameters[0]
+        _ = parameter.execute()
         let arrayValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
         
         guard arrayValue as? Array<Any> != nil else {
@@ -2667,9 +2677,42 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
             QuickMemory.shared.pushObject(arrayValue, inStackForParser: self.parser!)
             return
         }
-
+        
         let sorted = (arrayValue as! Array<String>).sorted()
         QuickMemory.shared.pushObject(sorted, inStackForParser: self.parser!)
+        return
+        
+    }
+
+    func executeRandom(_ parameters : QuickParameters) {
+        
+        if parameters.parameters.count != 2 {
+            QuickMemory.shared.pushObject(-1, inStackForParser: self.parser!)
+            return
+        }
+        
+        let parameter = parameters.parameters[0]
+        _ = parameter.execute()
+        let lowBoundValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
+        
+        guard lowBoundValue as? Int != nil else {
+            QuickMemory.shared.pushObject(-1, inStackForParser: self.parser!)
+            return
+        }
+
+        let parameter2 = parameters.parameters[1]
+        _ = parameter2.execute()
+        let highBoundValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
+        
+        guard highBoundValue as? Int != nil else {
+            QuickMemory.shared.pushObject(-1, inStackForParser: self.parser!)
+            return
+        }
+
+        let randomWithZeroAsLowest = arc4random_uniform(UInt32((highBoundValue as! Int) - (lowBoundValue as! Int) + 1))
+        let random = randomWithZeroAsLowest + (lowBoundValue as! Int)
+        
+        QuickMemory.shared.pushObject(Int(random), inStackForParser: self.parser!)
         return
         
     }
