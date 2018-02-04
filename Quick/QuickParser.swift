@@ -93,6 +93,7 @@ class Parser {
         QuickSymbolTable.rootSymbolTableForParser(self).addSymbol("postFormToURL", ofType: "Boolean")
         QuickSymbolTable.rootSymbolTableForParser(self).addSymbol("signInViaOAuth", ofType: "Boolean")
         QuickSymbolTable.rootSymbolTableForParser(self).addSymbol("capitalize", ofType: "String")
+        QuickSymbolTable.rootSymbolTableForParser(self).addSymbol("sortArray", ofType: "Array")
 
         Output.shared.string = ""
         self.tokens = Tokenizer().tokens(fromSource: fromSource)

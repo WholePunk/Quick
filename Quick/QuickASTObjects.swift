@@ -1369,6 +1369,9 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         if methodName == "capitalize" {
             symbolTable.checkArguments(parameters, types: ["String"], methodName: methodName)
         }
+        if methodName == "sortArray" {
+            symbolTable.checkArguments(parameters, types: ["Array"], methodName: methodName)
+        }
 
     }
     
@@ -1459,6 +1462,9 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         }
         if methodName == "capitalize" {
             return "String"
+        }
+        if methodName == "sortArray" {
+            return "Array"
         }
 
         return ""
@@ -1552,6 +1558,9 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         }
         if methodName == "capitalize" {
             executeCapitalize(parameters!)
+        }
+        if methodName == "sortArray" {
+            executeSortArray(parameters!)
         }
 
         QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
@@ -2635,6 +2644,32 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         
         let capitalized = (stringValue as! String).capitalized
         QuickMemory.shared.pushObject(capitalized, inStackForParser: self.parser!)
+        return
+        
+    }
+
+    func executeSortArray(_ parameters : QuickParameters) {
+        
+        if parameters.parameters.count != 1 {
+            QuickMemory.shared.pushObject([], inStackForParser: self.parser!)
+            return
+        }
+        
+        var parameter = parameters.parameters[0]
+        parameter.execute()
+        let arrayValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
+        
+        guard arrayValue as? Array<Any> != nil else {
+            QuickMemory.shared.pushObject([], inStackForParser: self.parser!)
+            return
+        }
+        guard arrayValue as? Array<String> != nil else {
+            QuickMemory.shared.pushObject(arrayValue, inStackForParser: self.parser!)
+            return
+        }
+
+        let sorted = (arrayValue as! Array<String>).sorted()
+        QuickMemory.shared.pushObject(sorted, inStackForParser: self.parser!)
         return
         
     }
