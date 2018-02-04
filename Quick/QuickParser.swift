@@ -18,7 +18,6 @@ class Parser {
     var errorAt = -1
     var lastCreatedQuickObject : QuickObject?
     var root = QuickMultilineStatement()
-    var symbolTable = QuickSymbolTable()
     var currentLine = 0
     var highlightedSource : NSMutableAttributedString = NSMutableAttributedString(string: "")
     
@@ -42,7 +41,7 @@ class Parser {
                 highlightedSource.setAttributes([NSForegroundColorAttributeName: "C41A16".hexColor], range: NSRange(location: currentToken().startIndex, length: (currentToken().endIndex - currentToken().startIndex)))
             }
             if currentType() == TokenType.COMMENT {
-                highlightedSource.setAttributes([NSForegroundColorAttributeName: "007400".hexColor], range: NSRange(location: currentToken().startIndex, length: (currentToken().endIndex - currentToken().startIndex)))
+                highlightedSource.setAttributes([NSForegroundColorAttributeName: "007400".hexColor], range: NSRange(location: currentToken().startIndex + 1, length: (currentToken().endIndex - currentToken().startIndex)))
             }
             if currentType() == TokenType.METHODNAME {
                 highlightedSource.setAttributes([NSForegroundColorAttributeName: "2E0D6E".hexColor], range: NSRange(location: currentToken().startIndex, length: (currentToken().endIndex - currentToken().startIndex)))
@@ -65,37 +64,36 @@ class Parser {
     
     func parse(fromSource: String) -> Bool {
         
-        symbolTable.addSymbol("print", ofType: "String")
-        symbolTable.addSymbol("getJSONArray", ofType: "Array")
-        symbolTable.addSymbol("getJSONDictionary", ofType: "Dictionary")
-        symbolTable.addSymbol("getImage", ofType: "Image")
-        symbolTable.addSymbol("encodeBase64", ofType: "String")
-        symbolTable.addSymbol("countArray", ofType: "Integer")
-        symbolTable.addSymbol("countDictionary", ofType: "Integer")
-        symbolTable.addSymbol("getDictionaryKeys", ofType: "Array")
-        symbolTable.addSymbol("addItemToDictionary", ofType: "Dictionary")
-        symbolTable.addSymbol("removeItemFromDictionary", ofType: "Dictionary")
-        symbolTable.addSymbol("addItemToArray", ofType: "Array")
-        symbolTable.addSymbol("removeItemFromArray", ofType: "Array")
-        symbolTable.addSymbol("setAppVariable", ofType: "Boolean")
-        symbolTable.addSymbol("getAppVariable", ofType: "")
-        symbolTable.addSymbol("setScreenVariable", ofType: "Boolean")
-        symbolTable.addSymbol("getScreenVariable", ofType: "")
-        symbolTable.addSymbol("replaceString", ofType: "String")
-        symbolTable.addSymbol("pushScreen", ofType: "String")
-        symbolTable.addSymbol("popScreen", ofType: "String")
-        symbolTable.addSymbol("popToRootScreen", ofType: "String")
-        symbolTable.addSymbol("showAlert", ofType: "String")
-        symbolTable.addSymbol("saveToFile", ofType: "Boolean")
-        symbolTable.addSymbol("readFromFile", ofType: "String")
-        symbolTable.addSymbol("getImageFromCamera", ofType: "Image")
-        symbolTable.addSymbol("getImageFromLibrary", ofType: "Image")
-        symbolTable.addSymbol("postJSONToURL", ofType: "Boolean")
-        symbolTable.addSymbol("postFormToURL", ofType: "Boolean")
-        symbolTable.addSymbol("signInViaOAuth", ofType: "Boolean")
-        symbolTable.addSymbol("capitalize", ofType: "String")
+        QuickSymbolTable.rootSymbolTableForParser(self).addSymbol("print", ofType: "String")
+        QuickSymbolTable.rootSymbolTableForParser(self).addSymbol("getJSONArray", ofType: "Array")
+        QuickSymbolTable.rootSymbolTableForParser(self).addSymbol("getJSONDictionary", ofType: "Dictionary")
+        QuickSymbolTable.rootSymbolTableForParser(self).addSymbol("getImage", ofType: "Image")
+        QuickSymbolTable.rootSymbolTableForParser(self).addSymbol("encodeBase64", ofType: "String")
+        QuickSymbolTable.rootSymbolTableForParser(self).addSymbol("countArray", ofType: "Integer")
+        QuickSymbolTable.rootSymbolTableForParser(self).addSymbol("countDictionary", ofType: "Integer")
+        QuickSymbolTable.rootSymbolTableForParser(self).addSymbol("getDictionaryKeys", ofType: "Array")
+        QuickSymbolTable.rootSymbolTableForParser(self).addSymbol("addItemToDictionary", ofType: "Dictionary")
+        QuickSymbolTable.rootSymbolTableForParser(self).addSymbol("removeItemFromDictionary", ofType: "Dictionary")
+        QuickSymbolTable.rootSymbolTableForParser(self).addSymbol("addItemToArray", ofType: "Array")
+        QuickSymbolTable.rootSymbolTableForParser(self).addSymbol("removeItemFromArray", ofType: "Array")
+        QuickSymbolTable.rootSymbolTableForParser(self).addSymbol("setAppVariable", ofType: "Boolean")
+        QuickSymbolTable.rootSymbolTableForParser(self).addSymbol("getAppVariable", ofType: "")
+        QuickSymbolTable.rootSymbolTableForParser(self).addSymbol("setScreenVariable", ofType: "Boolean")
+        QuickSymbolTable.rootSymbolTableForParser(self).addSymbol("getScreenVariable", ofType: "")
+        QuickSymbolTable.rootSymbolTableForParser(self).addSymbol("replaceString", ofType: "String")
+        QuickSymbolTable.rootSymbolTableForParser(self).addSymbol("pushScreen", ofType: "String")
+        QuickSymbolTable.rootSymbolTableForParser(self).addSymbol("popScreen", ofType: "String")
+        QuickSymbolTable.rootSymbolTableForParser(self).addSymbol("popToRootScreen", ofType: "String")
+        QuickSymbolTable.rootSymbolTableForParser(self).addSymbol("showAlert", ofType: "String")
+        QuickSymbolTable.rootSymbolTableForParser(self).addSymbol("saveToFile", ofType: "Boolean")
+        QuickSymbolTable.rootSymbolTableForParser(self).addSymbol("readFromFile", ofType: "String")
+        QuickSymbolTable.rootSymbolTableForParser(self).addSymbol("getImageFromCamera", ofType: "Image")
+        QuickSymbolTable.rootSymbolTableForParser(self).addSymbol("getImageFromLibrary", ofType: "Image")
+        QuickSymbolTable.rootSymbolTableForParser(self).addSymbol("postJSONToURL", ofType: "Boolean")
+        QuickSymbolTable.rootSymbolTableForParser(self).addSymbol("postFormToURL", ofType: "Boolean")
+        QuickSymbolTable.rootSymbolTableForParser(self).addSymbol("signInViaOAuth", ofType: "Boolean")
+        QuickSymbolTable.rootSymbolTableForParser(self).addSymbol("capitalize", ofType: "String")
 
-        QuickSymbolTable.sharedRoot = symbolTable
         Output.shared.string = ""
         self.tokens = Tokenizer().tokens(fromSource: fromSource)
         
@@ -134,7 +132,7 @@ class Parser {
             
         }
         
-        root.checkSymbols(symbolTable: symbolTable)
+        root.checkSymbols(symbolTable: QuickSymbolTable.rootSymbolTableForParser(self))
         
         return true
         

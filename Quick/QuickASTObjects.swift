@@ -94,18 +94,18 @@ class QuickMultilineStatement : QuickObject {
     }
     
     override func execute() -> Any? {
-        QuickSymbolTable.sharedRoot?.pushScope()
+        QuickSymbolTable.rootSymbolTableForParser(parser!).pushScope()
         for statement in content {
-            statement.checkSymbols(symbolTable: QuickSymbolTable.sharedRoot!)
+            statement.checkSymbols(symbolTable: QuickSymbolTable.rootSymbolTableForParser(parser!))
         }
         for statement in content {
             let returnValue = statement.execute()
             if returnValue != nil {
-                QuickSymbolTable.sharedRoot?.popScope()
+                QuickSymbolTable.rootSymbolTableForParser(parser!).popScope()
                 return returnValue
             }
         }
-        QuickSymbolTable.sharedRoot?.popScope()
+        QuickSymbolTable.rootSymbolTableForParser(parser!).popScope()
         return nil
     }
     
@@ -154,15 +154,15 @@ class QuickIdentifier : QuickObject {
     override func checkSymbols(symbolTable : QuickSymbolTable) {
         
         if subscriptValue != nil {
-            if QuickSymbolTable.sharedRoot!.getType(ofIdentifier: content) != "Array" && QuickSymbolTable.sharedRoot!.getType(ofIdentifier: content) != "Dictionary" {
+            if QuickSymbolTable.rootSymbolTableForParser(parser!).getType(ofIdentifier: content) != "Array" && QuickSymbolTable.rootSymbolTableForParser(parser!).getType(ofIdentifier: content) != "Dictionary" {
                 QuickError.shared.setErrorMessage("Subscripts are only allowed on arrays and dictionaries", withLine: -2)
             }
-            if QuickSymbolTable.sharedRoot!.getType(ofIdentifier: content) == "Array" {
+            if QuickSymbolTable.rootSymbolTableForParser(parser!).getType(ofIdentifier: content) == "Array" {
                 if subscriptValue?.getType() != "Integer" {
                     QuickError.shared.setErrorMessage("Array subscripts must be integers", withLine: -2)
                 }
             }
-            if QuickSymbolTable.sharedRoot!.getType(ofIdentifier: content) == "Dictionary" {
+            if QuickSymbolTable.rootSymbolTableForParser(parser!).getType(ofIdentifier: content) == "Dictionary" {
                 if subscriptValue?.getType() != "String" {
                     QuickError.shared.setErrorMessage("Dictionary subscripts must be strings", withLine: -2)
                 }
@@ -176,7 +176,7 @@ class QuickIdentifier : QuickObject {
     
     override func getType() -> String {
         
-        guard QuickSymbolTable.sharedRoot != nil else {
+        guard QuickSymbolTable.rootSymbolTableForParser(parser!) != nil else {
             return "Symbol Table Error"
         }
         
@@ -184,7 +184,7 @@ class QuickIdentifier : QuickObject {
             return ""
         }
         
-        return QuickSymbolTable.sharedRoot!.getType(ofIdentifier: content)
+        return QuickSymbolTable.rootSymbolTableForParser(parser!).getType(ofIdentifier: content)
     }
     
     override func execute() -> Any? {
@@ -196,7 +196,7 @@ class QuickIdentifier : QuickObject {
             if subscriptValue == nil {
                 QuickMemory.shared.pushObject(storedValue, inStackForParser: self.parser!)
             } else {
-                if QuickSymbolTable.sharedRoot!.getType(ofIdentifier: content) == "Array" {
+                if QuickSymbolTable.rootSymbolTableForParser(parser!).getType(ofIdentifier: content) == "Array" {
                     let parametersArray = storedValue as! Array<Any>
                     subscriptValue?.execute()
                     let subscriptInt = QuickMemory.shared.popObject(inStackForParser: self.parser!) as! Int
@@ -206,7 +206,7 @@ class QuickIdentifier : QuickObject {
                     } else {
                         QuickMemory.shared.pushObject(parametersArray[subscriptInt], inStackForParser: self.parser!)
                     }
-                } else if QuickSymbolTable.sharedRoot!.getType(ofIdentifier: content) == "Dictionary" {
+                } else if QuickSymbolTable.rootSymbolTableForParser(parser!).getType(ofIdentifier: content) == "Dictionary" {
                     subscriptValue?.execute()
                     let subscriptString = QuickMemory.shared.popObject(inStackForParser: self.parser!) as! String
                     let dictionary = storedValue as! Dictionary<String, Any>
@@ -215,6 +215,8 @@ class QuickIdentifier : QuickObject {
                     } else {
                         QuickMemory.shared.pushObject(dictionary[subscriptString]!, inStackForParser: self.parser!)
                     }
+                } else {
+                    QuickMemory.shared.pushObject("Could not dereference value from unknown type", inStackForParser: self.parser!)
                 }
             }
             

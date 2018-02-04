@@ -32,6 +32,8 @@ class QuickMemory {
             key = inHeapForParser!.uuid
         }
         
+        print("Set Object for key: \(object) : \(key) - \(forKey)")
+        
         if heaps[key] == nil {
             heaps[key] = Dictionary<String, Any>()
         }
@@ -50,6 +52,8 @@ class QuickMemory {
     
     func getObjectForKey(_ key: String, inHeapForParser: Parser?) -> Any {
         
+        heapSemaphore.wait()
+
         var parserKey = "AppWide"
         if inHeapForParser != nil {
             parserKey = inHeapForParser!.uuid
@@ -71,6 +75,10 @@ class QuickMemory {
             accessedSymbols[parserKey]!.append(key)
         }
         
+        print("Got value for key: \(returnValue!) : \(parserKey) - \(key)")
+        
+        heapSemaphore.signal()
+
         return returnValue!
 
     }
@@ -86,6 +94,8 @@ class QuickMemory {
             key = inStackForParser!.uuid
         }
         
+        print("Pushing stack for parser \(key): \(object)")
+        
         if stacks[key] == nil {
             stacks[key] = Array<Any>()
         }
@@ -97,6 +107,8 @@ class QuickMemory {
     
     func popObject(inStackForParser: Parser?) -> Any {
         
+        stackSemaphore.wait()
+
         var parserKey = "AppWide"
         if inStackForParser != nil {
             parserKey = inStackForParser!.uuid
@@ -111,6 +123,10 @@ class QuickMemory {
             returnValue = ""
         }
         
+        stackSemaphore.signal()
+        
+        print("Popping stack for parser \(parserKey): \(returnValue!)")
+
         return returnValue!
     }
     

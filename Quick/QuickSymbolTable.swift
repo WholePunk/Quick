@@ -8,12 +8,23 @@
 
 class QuickSymbolTable {
     
-    static var sharedRoot : QuickSymbolTable?
+//    static var sharedRoot : QuickSymbolTable?
     private var symbols : Dictionary<String, String> = [:] // Keys are symbol identifiers, objects are symbol types
     private var parent : QuickSymbolTable?
     private var child : QuickSymbolTable?
     static var externalSymbols : Dictionary<String, ModelRenderer> = [:]
+    static var roots = Dictionary<String, QuickSymbolTable>()
 
+    static func rootSymbolTableForParser(_ parser: Parser) -> QuickSymbolTable	 {
+        
+        if QuickSymbolTable.roots[parser.uuid] == nil {
+            QuickSymbolTable.roots[parser.uuid] = QuickSymbolTable()
+        }
+        
+        return QuickSymbolTable.roots[parser.uuid]!
+        
+    }
+    
     func pushScope() {
         
         var smallestScope = self
@@ -132,8 +143,4 @@ class QuickSymbolTable {
         
     }
     
-//    func localSymbols() -> Array<String> {
-//        
-//    }
-
 }
