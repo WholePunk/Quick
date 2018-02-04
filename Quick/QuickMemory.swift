@@ -16,13 +16,15 @@ class QuickMemory {
     var heaps : Dictionary<String, Dictionary<String, Any>> = [:]
     var archivedHeap : Dictionary<Int, Dictionary<String, Any>> = [:]
     var accessedSymbols : Dictionary<String, Array<String>> = [:]
-
+    static var numberOfHeapSets = 0
+    
     func reset() {
 //        QuickMemory.shared = QuickMemory()
     }
     
     let heapSemaphore = DispatchSemaphore(value: 1)
-    
+    let heapReadSemaphore = DispatchSemaphore(value: 1)
+
     func setObject(_ object: Any, forKey: String, inHeapForParser: Parser?) {
         
         heapSemaphore.wait()
@@ -31,9 +33,7 @@ class QuickMemory {
         if inHeapForParser != nil {
             key = inHeapForParser!.uuid
         }
-        
-        print("Set Object for key: \(object) : \(key) - \(forKey)")
-        
+                
         if heaps[key] == nil {
             heaps[key] = Dictionary<String, Any>()
         }
@@ -48,11 +48,12 @@ class QuickMemory {
         }
 
         heapSemaphore.signal()
+                
     }
     
     func getObjectForKey(_ key: String, inHeapForParser: Parser?) -> Any {
         
-        heapSemaphore.wait()
+        heapReadSemaphore.wait()
 
         var parserKey = "AppWide"
         if inHeapForParser != nil {
@@ -75,9 +76,7 @@ class QuickMemory {
             accessedSymbols[parserKey]!.append(key)
         }
         
-        print("Got value for key: \(returnValue!) : \(parserKey) - \(key)")
-        
-        heapSemaphore.signal()
+        heapReadSemaphore.signal()
 
         return returnValue!
 
@@ -93,8 +92,6 @@ class QuickMemory {
         if inStackForParser != nil {
             key = inStackForParser!.uuid
         }
-        
-        print("Pushing stack for parser \(key): \(object)")
         
         if stacks[key] == nil {
             stacks[key] = Array<Any>()
@@ -125,8 +122,6 @@ class QuickMemory {
         
         stackSemaphore.signal()
         
-        print("Popping stack for parser \(parserKey): \(returnValue!)")
-
         return returnValue!
     }
     

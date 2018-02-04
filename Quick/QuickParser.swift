@@ -110,9 +110,6 @@ class Parser {
             }
         }
         self.tokens = tokensWithoutComments
-        for token in self.tokens {
-            print("\(token.tokenType) : \(token.tokenString)")
-        }
 
         // We expect that a program should be composed of newlines and statements, until it hits an EOF, then we're done.
         tokenIndex = 0
