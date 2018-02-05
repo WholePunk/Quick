@@ -103,6 +103,10 @@ class QuickSymbolTable {
     
     func checkArguments(_ args : QuickParameters?, types: Array<String>, methodName: String) {
         
+        if args == nil && types.count == 0 {
+            return // No arguments to check
+        }
+        
         guard args != nil else {
             QuickError.shared.setErrorMessage("Expected \(types.count) arguments when calling \(methodName), found none", withLine: -2)
             return
