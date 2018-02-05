@@ -11,6 +11,7 @@
 /************************/
 
 import Alamofire
+import SWXMLHash
 
 class QuickObject : NSObject {
     
@@ -1372,9 +1373,13 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         if methodName == "sortArray" {
             symbolTable.checkArguments(parameters, types: ["Array"], methodName: methodName)
         }
-
         if methodName == "random" {
             symbolTable.checkArguments(parameters, types: ["Integer", "Integer"], methodName: methodName)
+        }
+        if methodName == "getDictionaryFromXML" {
+            if parameters == nil || parameters!.parameters.count == 0 || parameters!.parameters.count > 2 {
+                QuickError.shared.setErrorMessage("Expected 1 or 2 parameters when calling \(methodName)", withLine: -2)
+            }
         }
 
     }
@@ -1472,6 +1477,9 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         }
         if methodName == "random" {
             return "Integer"
+        }
+        if methodName == "getDictionaryFromXML" {
+            return "Dictionary"
         }
 
         return ""
@@ -1571,6 +1579,9 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         }
         if methodName == "random" {
             executeRandom(parameters!)
+        }
+        if methodName == "getDictionaryFromXML" {
+            executeGetDictionaryFromXML(parameters!)
         }
 
         QuickMemory.shared.archiveHeapForParser(parser!, onLine: sourceLine)
@@ -2716,6 +2727,63 @@ class QuickMethodCall : QuickObject, UIImagePickerControllerDelegate, UINavigati
         return
         
     }
+    
+    func executeGetDictionaryFromXML(_ parameters : QuickParameters) {
+        
+        if parameters.parameters.count > 2 || parameters.parameters.count == 0 {
+            QuickMemory.shared.pushObject(["error": "getDictionaryFromXML expects one or two arguments"], inStackForParser: self.parser!)
+            return
+        }
+        
+        // We only have a single parameter
+        let parameter = parameters.parameters[0]
+        _ = parameter.execute()
+        let parameterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
+        
+        guard parameterValue as? String != nil else {
+            QuickMemory.shared.pushObject(["error": "getDictionaryFromXML expects a string as the first parameter"], inStackForParser: self.parser!)
+            return
+        }
+        
+        let url = URL(string: (parameterValue as! String))
+        guard url != nil else {
+            QuickMemory.shared.pushObject(["error":"Invalid url to getDictionaryFromXML call"], inStackForParser: self.parser!)
+            return
+        }
+        
+        var headersDictionary : Dictionary<String, String>? = nil
+        
+        if parameters.parameters.count > 1 {
+            let headersParameter = parameters.parameters[1]
+            _ = headersParameter.execute()
+            let headersParameterValue = QuickMemory.shared.popObject(inStackForParser: self.parser!)
+            
+            guard headersParameterValue as? Dictionary<String, String> != nil else {
+                QuickMemory.shared.pushObject(["error": "getDictionaryFromXML expects a dictionary of strings as the first parameter"], inStackForParser: self.parser!)
+                return
+            }
+            
+            headersDictionary = headersParameterValue as? Dictionary<String, String>
+        }
+        
+        var data : Data?
+        var response : URLResponse?
+        var error : Error?
+        (data, response, error) = URLSession.shared.synchronousDataTask(with: url!, andHeaders: headersDictionary)
+        
+        if error != nil {
+            QuickMemory.shared.pushObject(["error": error.debugDescription], inStackForParser: self.parser!)
+            return
+        }
+        
+        if data != nil {
+            let xml = SWXMLHash.parse(data!)
+            QuickMemory.shared.pushObject(xml, inStackForParser: self.parser!)
+        } else {
+            QuickMemory.shared.pushObject(["error": "No XML data available"], inStackForParser: self.parser!)
+        }
+
+    }
 
 }
 
@@ -3322,7 +3390,3 @@ extension URLSession {
         return (data, response, error)
     }
 }
-
-
-
-
