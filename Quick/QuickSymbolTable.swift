@@ -9,7 +9,7 @@
 class QuickSymbolTable {
     
 //    static var sharedRoot : QuickSymbolTable?
-    private var symbols : Dictionary<String, String> = [:] // Keys are symbol identifiers, objects are symbol types
+    var symbols : Dictionary<String, String> = [:] // Keys are symbol identifiers, objects are symbol types
     private var parent : QuickSymbolTable?
     private var child : QuickSymbolTable?
     static var externalSymbols : Dictionary<String, ModelRenderer> = [:]

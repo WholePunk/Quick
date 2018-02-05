@@ -2960,10 +2960,10 @@ class QuickAssignment : QuickObject {
                         let imageUUID = UUID().uuidString
                         ImageManager.sharedInstance.addTempImage(rightSideResult as! UIImage, withName: imageUUID)
                         (QuickSymbolTable.externalSymbols[leftSideResult as! String] as? ViewRenderer)?.updateViewProperty(forIdentifier: propertyId, withNewValue: imageUUID, withDuration: 0.3)
-                        (QuickSymbolTable.externalSymbols[leftSideResult as! String] as? ViewRenderer)?.render()
+//                        (QuickSymbolTable.externalSymbols[leftSideResult as! String] as? ViewRenderer)?.render()
                     } else {
                         (QuickSymbolTable.externalSymbols[leftSideResult as! String] as? ViewRenderer)?.updateViewProperty(forIdentifier: propertyId, withNewValue: rightSideResult, withDuration: 0.3)
-                        (QuickSymbolTable.externalSymbols[leftSideResult as! String] as? ViewRenderer)?.render()
+//                        (QuickSymbolTable.externalSymbols[leftSideResult as! String] as? ViewRenderer)?.render()
                     }
                     
                 } else {
@@ -2974,10 +2974,10 @@ class QuickAssignment : QuickObject {
                             let imageUUID = UUID().uuidString
                             ImageManager.sharedInstance.addTempImage(rightSideResult as! UIImage, withName: imageUUID)
                             (QuickSymbolTable.externalSymbols[leftSideResult as! String] as? ViewRenderer)?.updateViewProperty(forIdentifier: propertyId, withNewValue: imageUUID, withDuration: 0.3)
-                            (QuickSymbolTable.externalSymbols[leftSideResult as! String] as? ViewRenderer)?.render()
+//                            (QuickSymbolTable.externalSymbols[leftSideResult as! String] as? ViewRenderer)?.render()
                         } else {
                             (QuickSymbolTable.externalSymbols[leftSideResult as! String] as? ViewRenderer)?.updateViewProperty(forIdentifier: propertyId, withNewValue: rightSideResult, withDuration: 0.3)
-                            (QuickSymbolTable.externalSymbols[leftSideResult as! String] as? ViewRenderer)?.render()
+//                            (QuickSymbolTable.externalSymbols[leftSideResult as! String] as? ViewRenderer)?.render()
                         }
                         
                     }

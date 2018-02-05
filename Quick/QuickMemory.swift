@@ -16,7 +16,6 @@ class QuickMemory {
     var heaps : Dictionary<String, Dictionary<String, Any>> = [:]
     var archivedHeap : Dictionary<Int, Dictionary<String, Any>> = [:]
     var accessedSymbols : Dictionary<String, Array<String>> = [:]
-    static var numberOfHeapSets = 0
     
     func reset() {
 //        QuickMemory.shared = QuickMemory()
